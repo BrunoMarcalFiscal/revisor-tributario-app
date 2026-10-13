@@ -186,19 +186,33 @@ def progresso(rid):
     return {'rodando': False, 'log': [], 'erro': r.get('erro') if r.get('situacao') == 'erro' else None}
 
 
-def nome_por_cnpj(cnpj):
-    """Razão social pelas bases públicas (BrasilAPI e CNPJ.ws). Falhou: devolve vazio e a tela pede o nome."""
-    fontes = [('https://brasilapi.com.br/api/cnpj/v1/%s', 'razao_social'), ('https://publica.cnpj.ws/cnpj/%s', 'razao_social')]
-    for url, campo in fontes:
+def dados_cnpj(cnpj):
+    """Razão social e data de abertura pelas bases públicas (BrasilAPI e CNPJ.ws). Falhou: vazio, e a tela pede à mão."""
+    fontes = [('https://brasilapi.com.br/api/cnpj/v1/%s', lambda j: (j.get('razao_social'), j.get('data_inicio_atividade'))),
+              ('https://publica.cnpj.ws/cnpj/%s', lambda j: (j.get('razao_social'), (j.get('estabelecimento') or {}).get('data_inicio_atividade')))]
+    for url, ler in fontes:
         try:
             req = urllib.request.Request(url % cnpj, headers={'User-Agent': 'Mozilla/5.0 (Revisor Tributario; Marcal Contabilidade)', 'Accept': 'application/json'})
             with urllib.request.urlopen(req, timeout=8) as resp:
-                nome = (json.loads(resp.read().decode('utf-8')).get(campo) or '').strip()
+                nome, abertura = ler(json.loads(resp.read().decode('utf-8')))
             if nome:
-                return nome
+                return {'nome': nome.strip(), 'abertura': (abertura or '')[:10]}
         except Exception:
             continue
-    return ''
+    return {'nome': '', 'abertura': ''}
+
+
+def nome_por_cnpj(cnpj):
+    return dados_cnpj(cnpj)['nome']
+
+
+def data_valida(d):
+    d = str(d or '').strip()
+    try:
+        datetime.date.fromisoformat(d)
+        return d
+    except ValueError:
+        return ''
 
 
 # ── sessão ───────────────────────────────────────────────────────────────────
@@ -448,7 +462,7 @@ class Handler(BaseHTTPRequestHandler):
                 c = so_digitos((q.get('cnpj') or [''])[0])
                 if not cnpj_valido(c):
                     raise Erro('CNPJ inválido')
-                return self._json({'cnpj': c, 'nome': nome_por_cnpj(c)})
+                return self._json(dict(dados_cnpj(c), cnpj=c))
             self._json({'erro': 'não encontrado'}, 404)
         except Exception as ex:
             self._erro(ex)
@@ -523,13 +537,17 @@ class Handler(BaseHTTPRequestHandler):
                 cnpj = so_digitos(d.get('cnpj'))
                 if not cnpj_valido(cnpj):
                     raise Erro('CNPJ inválido')
-                nome = (d.get('nome') or '').strip() or nome_por_cnpj(cnpj)
+                nome = (d.get('nome') or '').strip()
+                abertura = data_valida(d.get('abertura'))
+                if not nome or not abertura:
+                    pub = dados_cnpj(cnpj)
+                    nome, abertura = nome or pub['nome'], abertura or data_valida(pub['abertura'])
                 if not nome:
                     raise Erro('Informe a razão social')
                 regime = d.get('regime') if d.get('regime') in REGIMES else ''
                 with TRAVA:
                     ind = ler_indice()
-                    ind['empresas'][cnpj] = dict(ind['empresas'].get(cnpj, {'criado_em': agora(), 'criado_por': usuario}), nome=nome[:160], regime=regime)
+                    ind['empresas'][cnpj] = dict(ind['empresas'].get(cnpj, {'criado_em': agora(), 'criado_por': usuario}), nome=nome[:160], regime=regime, abertura=abertura)
                     gravar_indice(ind)
                 return self._json(dict(ind['empresas'][cnpj], cnpj=cnpj), 201)
             if p == '/api/revisoes' and metodo == 'POST':
@@ -547,9 +565,10 @@ class Handler(BaseHTTPRequestHandler):
                     ind['revisoes'].append(r)
                     gravar_indice(ind)
                 os.makedirs(os.path.join(pasta_da(r), 'entrada'), exist_ok=True)
-                regime = ind['empresas'][cnpj].get('regime')
-                if regime:
-                    cli(r, 'perfil', stdin={cnpj: {'regime_tributario': regime}})
+                emp = ind['empresas'][cnpj]
+                inicial = {k: v for k, v in (('regime_tributario', emp.get('regime')), ('data_abertura', emp.get('abertura'))) if v}
+                if inicial:
+                    cli(r, 'perfil', stdin={cnpj: inicial})
                 return self._json(com_empresa(r, ind), 201)
             m = ROTA_REV.match(p)
             if m:

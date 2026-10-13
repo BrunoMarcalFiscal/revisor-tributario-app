@@ -50,6 +50,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 .kb details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--surface)}.kb summary{cursor:pointer;font-weight:600}
 .est{font-size:10.5px;color:var(--muted);border:1px dashed var(--line);border-radius:4px;padding:0 4px;margin-left:4px}
 .empty{color:var(--muted);padding:12px;text-align:center}
+.ig td.m{padding:3px;text-align:center}.ig i{display:block;width:100%;min-width:22px;height:20px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line)}
+.ig i.ok{background:var(--good);border-color:var(--good)}.ig i.retificadora{background:var(--accent);border-color:var(--accent)}.ig i.estrutura{background:var(--warn);border-color:var(--warn)}
+.ig i.sem_arquivo{background:var(--crit);border-color:var(--crit)}.ig i.no_prazo{background:transparent;border-style:dashed}.ig i.fora{background:transparent;border-color:transparent}
+.ig th{position:static}.leg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-2);margin-top:10px}.leg span{display:inline-flex;align-items:center;gap:5px}.leg i{width:14px;height:14px;display:inline-block;min-width:0}
+.gv-alta{color:var(--crit);font-weight:600}.gv-media{color:#9a6a00;font-weight:600}.gv-info{color:var(--muted)}
+:root[data-theme="dark"] .gv-media{color:var(--warn)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .gv-media{color:var(--warn)}}
 @media (max-width:900px){.app{grid-template-columns:1fr}.side{position:static;height:auto}.kpis{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.det{grid-template-columns:1fr}}
 @media print{.side,.filters{display:none}.app{grid-template-columns:1fr}.tw{max-height:none}}
 </style>
@@ -62,6 +68,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
   <a href="#sumario" class="on">1. Sumário executivo</a>
   <a href="#recuperacao">Recuperação de Créditos</a>
   <a href="#estrategia">Análise Estratégica</a>
+  <a href="#integridade">Integridade e confronto</a>
   <a href="#validacao">2. Validação dos arquivos</a>
   <a href="#achados">3. Tabela de achados</a>
   <a href="#tributos">4. Detalhamento por tributo</a>
@@ -160,6 +167,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
   <div class="sub">Onde a empresa paga mais, quem gera essa carga (operações, produtos, fornecedores, estados), o que muda com a Reforma Tributária e o plano de ação. Tudo sai dos arquivos do período; o que depende de premissa (centro de distribuição, alíquotas da reforma) é calculado aqui mesmo com valores que você ajusta. É base técnica para a decisão do especialista, não recomendação automática.</div>
   <div class="filters" style="position:static"><label>Empresa<select id="es-emp"></select></label><span class="cnt" id="es-per"></span></div>
   <div id="es-corpo"></div>
+ </section>
+
+ <section id="integridade">
+  <h2>Integridade e confronto</h2>
+  <div class="sub">Regime de cada ano, obrigações mês a mês desde a abertura e o confronto nota a nota entre SPED Fiscal e EFD Contribuições. "Sem arquivo" quer dizer que o arquivo do mês não veio para a revisão: confirme a entrega no recibo antes de concluir que não foi entregue.</div>
+  <div class="filters" style="position:static"><label>Empresa<select id="ig-emp"></select></label><label style="flex-direction:row;align-items:center;gap:6px;font-size:12px;color:var(--text-2)"><input type="checkbox" id="ig-inf"> Mostrar informativos no confronto</label></div>
+  <div id="ig-corpo"></div>
  </section>
 
  <section id="validacao">
@@ -489,6 +503,87 @@ document.getElementById('rf-reg').value = RF.reg; if(!R.tem_lucro_real){ const o
 [['rf-reg','reg'],['rf-emp','emp'],['rf-tese','tese'],['rf-trib','trib'],['rf-ano','ano'],['rf-seg','seg'],['rf-comp','comp'],['rf-st','st'],['rf-sit','sit']].forEach(([id,k])=>document.getElementById(id).addEventListener('change',e=>{RF[k]=e.target.value; renderRec();}));
 renderRec();
 
+
+// ------------------------------------------------------------------ Integridade e confronto
+const IG = D.integridade || [];
+const MESES_ABR = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const EST_TXT = {ok:'íntegro', retificadora:'íntegro (retificadora)', estrutura:'problema de estrutura', sem_arquivo:'sem arquivo', nao_exigida:'não exigida', no_prazo:'no prazo'};
+const fmtMes = m => m ? m.slice(5)+'/'+m.slice(0,4) : '';
+const fmtData = d => d && d.length===8 ? d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4) : (d||'');
+function igAnosAgrupados(lista){
+  // anos seguidos sem nenhum arquivo viram uma linha só ("2014 a 2024")
+  const out = []; lista.slice().reverse().forEach(r => {
+    const u = out[out.length-1];
+    if (u && r.fonte==='nenhum arquivo do ano foi enviado' && u.fonte===r.fonte) { u.ini = r.ano; u.rotulo = u.ini+' a '+u.fim; }
+    else out.push(Object.assign({}, r, {ini:r.ano, fim:r.ano, rotulo:r.ano}));
+  }); return out; }
+function igRender(){
+  const el = document.getElementById('ig-corpo'); const E = IG[+document.getElementById('ig-emp').value || 0];
+  if (!E) { el.innerHTML = '<div class="card empty">Sem dados.</div>'; return; }
+  const inf = document.getElementById('ig-inf').checked;
+  let h = '';
+  // regime por ano
+  h += '<div class="card"><h3 style="margin-top:0">Regime por ano</h3><div class="tw"><table><thead><tr><th>Ano</th><th>Regime</th><th>De onde veio</th><th class="num">Meses com EFD</th><th>Atenção</th></tr></thead><tbody>'
+    + igAnosAgrupados(E.regime_anos).map(r => '<tr><td style="white-space:nowrap">'+r.rotulo+'</td><td><b>'+esc(r.regime)+'</b></td><td class="small">'+esc(r.fonte)+'</td><td class="num">'+(r.meses_efd||'')+'</td><td class="small">'+(r.alertas.length?'<span class="bad">'+r.alertas.map(esc).join('<br>')+'</span>':'')+'</td></tr>').join('')
+    + '</tbody></table></div><div class="small" style="margin-top:8px">As teses de recuperação usam o regime de cada ano. Para corrigir um ano, informe o regime do ano no perfil da empresa.</div></div>';
+  // integridade
+  const it = E.integridade;
+  if (it) {
+    const rs = it.resumo;
+    const kp = (rot, r) => '<div class="kpi" style="--k:'+(r.sem_arquivo||r.estrutura?'var(--crit)':'var(--good)')+'"><div class="l">'+rot+'</div><div class="v">'+r.integros+' de '+r.exigidos+'</div><div class="h">meses íntegros · '+r.sem_arquivo+' sem arquivo · '+r.estrutura+' com problema'+(r.retificadora?' · '+r.retificadora+' retificadora(s)':'')+'</div></div>';
+    h += '<div class="card"><h3 style="margin-top:0">Obrigações mês a mês, de '+fmtMes(it.inicio)+' a '+fmtMes(it.fim)+'</h3>'
+      + (it.abertura_informada ? '' : '<div class="small bad" style="margin-bottom:8px">Data de abertura não informada: a contagem começa no primeiro arquivo enviado. Informe a abertura no perfil para conferir desde o início.</div>')
+      + '<div class="kpis" style="grid-template-columns:repeat(2,1fr);margin-top:6px">'+kp('SPED Fiscal (EFD ICMS/IPI)', rs.fiscal)+kp('EFD Contribuições', rs.contrib)+'</div>';
+    const porAno = {}; it.meses.forEach(l => (porAno[l.mes.slice(0,4)] = porAno[l.mes.slice(0,4)] || {})[l.mes.slice(5)] = l);
+    h += '<div class="tw"><table class="ig"><thead><tr><th>Ano</th><th>Obrigação</th>'+MESES_ABR.map(m=>'<th style="text-align:center">'+m+'</th>').join('')+'</tr></thead><tbody>';
+    Object.keys(porAno).sort().reverse().forEach(ano => {
+      [['fiscal','SPED Fiscal'],['contrib','EFD Contribuições']].forEach(([k,rot],i) => {
+        h += '<tr>'+(i===0?'<td rowspan="2"><b>'+ano+'</b><div class="small">'+esc(((E.regime_anos.find(r=>r.ano===ano)||{}).regime)||'')+'</div></td>':'')+'<td class="small">'+rot+'</td>';
+        for (let m=1;m<=12;m++){ const l = porAno[ano][String(m).padStart(2,'0')]; if(!l){ h+='<td class="m"><i class="fora"></i></td>'; continue; }
+          const c = l[k]; const tip = MESES_ABR[m-1]+'/'+ano+' · '+rot+': '+EST_TXT[c.estado]+(c.problemas&&c.problemas.length?' · '+c.problemas.join('; '):'')+(c.arquivo?' · '+c.arquivo:'')+(c.versoes>1?' · '+c.versoes+' versões enviadas':'');
+          h += '<td class="m" title="'+esc(tip)+'"><i class="'+c.estado+'"></i></td>'; }
+        h += '</tr>';
+      });
+    });
+    h += '</tbody></table></div><div class="leg">'+[['ok','íntegro'],['retificadora','retificadora'],['estrutura','problema de estrutura (9900/9999)'],['sem_arquivo','sem arquivo'],['nao_exigida','não exigida no regime'],['no_prazo','ainda no prazo']].map(([k,t])=>'<span class="ig"><i class="'+k+'"></i>'+t+'</span>').join('')+'</div>';
+    const prob = it.meses.flatMap(l => [['fiscal','SPED Fiscal'],['contrib','EFD Contribuições']].filter(([k])=>['estrutura','sem_arquivo'].includes(l[k].estado)).map(([k,rot])=>({mes:l.mes, rot, c:l[k]})));
+    if (prob.length) h += '<details style="margin-top:10px"><summary class="small">Ver os '+prob.length+' mês(es) com pendência</summary><div class="tw" style="max-height:320px"><table><thead><tr><th>Mês</th><th>Obrigação</th><th>Situação</th><th>Detalhe</th></tr></thead><tbody>'
+      + prob.map(p=>'<tr><td>'+fmtMes(p.mes)+'</td><td>'+p.rot+'</td><td class="'+(p.c.estado==='sem_arquivo'?'bad':'')+'">'+EST_TXT[p.c.estado]+'</td><td class="small">'+esc((p.c.problemas||[]).join('; '))+'</td></tr>').join('')+'</tbody></table></div></details>';
+    h += '</div>';
+  }
+  // confronto
+  const CF = E.confronto || [];
+  const par = CF.filter(l => l.estado !== 'sem_par');
+  h += '<div class="card"><h3 style="margin-top:0">SPED Fiscal × EFD Contribuições, mês a mês</h3>';
+  if (!par.length) h += '<div class="empty">Nenhum mês com os dois arquivos para confrontar.</div>';
+  else {
+    const div = par.filter(l=>l.estado==='divergente').length;
+    h += '<div class="small" style="margin-bottom:8px">'+par.length+' mês(es) com os dois arquivos · <b class="'+(div?'bad':'ok')+'">'+div+' com divergência</b>. Clique no mês para ver nota a nota onde está a diferença.</div>';
+    const q = (x) => x ? x.qtd+' · '+brl(x.valor) : '—';
+    h += '<div class="tw"><table><thead><tr><th>Mês</th><th>Situação</th><th class="num">Saídas no SPED Fiscal</th><th class="num">Saídas na EFD</th><th class="num">Entradas no SPED Fiscal</th><th class="num">Entradas na EFD</th><th>Divergências</th></tr></thead><tbody>';
+    CF.slice().reverse().forEach((l,i) => {
+      if (l.estado==='sem_par') { h += '<tr><td>'+fmtMes(l.mes)+'</td><td class="small" colspan="6">'+esc(l.resumo)+': sem confronto</td></tr>'; return; }
+      const lf=(l.lados||{}).fiscal||{}, lc=(l.lados||{}).contrib||{};
+      const lista = (l.divergencias||[]).filter(d => inf || d.gravidade!=='info');
+      h += '<tr class="row" onclick="igTog(\''+l.mes+'\')"><td><b>'+fmtMes(l.mes)+'</b></td><td>'+(l.estado==='divergente'?'<span class="bad">divergente</span>':'<span class="ok">confere</span>')+(l.consolidada?' <span class="tag">EFD consolidada</span>':'')+'</td>'
+        + '<td class="num">'+q(lf.saida)+'</td><td class="num">'+(l.consolidada?'—':q(lc.saida))+'</td><td class="num">'+q(lf.entrada)+'</td><td class="num">'+(l.consolidada?'—':q(lc.entrada))+'</td>'
+        + '<td class="small">'+esc(l.resumo)+(l.informativos?' <span class="small">(+'+l.informativos+' informativo(s))</span>':'')+'</td></tr>';
+      h += '<tr id="ig-d-'+l.mes+'" hidden><td colspan="7"><div style="background:var(--surface-2);border-radius:8px;padding:10px">'
+        + (l.receita?'<div class="small" style="margin-bottom:6px">Receita das saídas no SPED Fiscal '+brl(l.receita.fiscal)+' × receita bruta na EFD '+brl(l.receita.contrib)+' (diferença '+brl(l.receita.diferenca)+')</div>':'')
+        + (lista.length ? '<table><thead><tr><th>Gravidade</th><th>Documento</th><th>Data</th><th>Sentido</th><th>CFOP</th><th class="num">Valor</th><th>Onde está a divergência</th></tr></thead><tbody>'
+          + lista.map(d => '<tr><td class="gv-'+d.gravidade+'">'+({alta:'alta',media:'conferir',info:'informativo'}[d.gravidade])+'</td><td>'+esc(d.doc)+' '+esc(d.numero||'')+'</td><td>'+fmtData(d.data)+'</td><td>'+esc(d.sentido||'')+'</td><td>'+esc(d.cfop||'')+'</td><td class="num">'+brl(d.valor||0)+'</td><td class="small">'+esc(d.onde)
+            + (d.diferencas?'<table style="margin-top:4px"><thead><tr><th>Campo</th><th>SPED Fiscal</th><th>EFD Contribuições</th><th class="num">Diferença</th></tr></thead><tbody>'+d.diferencas.map(x=>'<tr><td>'+esc(x.campo)+'</td><td>'+esc(x.fiscal)+'</td><td>'+esc(x.contrib)+'</td><td class="num">'+(x.diferenca!=null?brl(x.diferenca):'')+'</td></tr>').join('')+'</tbody></table>':'')
+            + (d.chave?'<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;opacity:.75;margin-top:2px">'+esc(d.chave)+'</div>':'')+'</td></tr>').join('') + '</tbody></table>'
+          : '<div class="small">Nada a mostrar'+(l.informativos&&!inf?' (há '+l.informativos+' informativo(s): marque "Mostrar informativos")':'')+'.</div>')
+        + (l.cortadas?'<div class="small">+'+l.cortadas+' não exibidas</div>':'') + '</div></td></tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+function igTog(m){ const r=document.getElementById('ig-d-'+m); if(r) r.hidden=!r.hidden; }
+(function(){ const s=document.getElementById('ig-emp'); s.innerHTML = IG.map((e,i)=>'<option value="'+i+'">'+esc(e.nome)+'</option>').join(''); s.addEventListener('input', igRender); document.getElementById('ig-inf').addEventListener('input', igRender); igRender(); })();
 </script>
 </body>
 </html>

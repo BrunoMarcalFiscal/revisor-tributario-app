@@ -76,6 +76,9 @@ def gerar(ctx, achados, resumo, pasta_saida):
         'recuperacao': recuperacao.montar(ctx, achados),
     }
     dados['estrategia'] = estrategia.montar(ctx, achados, dados['recuperacao'])
+    dados['integridade'] = [{'cnpj': c, 'nome': e['nome'], 'regime_anos': list((e.get('regime_anos') or {}).values()),
+                             'integridade': e.get('integridade'), 'confronto': e.get('confronto') or []}
+                            for c, e in sorted(ctx['empresas'].items())]
     _anexo_recuperacao(dados['recuperacao'], pasta_saida, anexos)
     tpl = open(os.path.join(os.path.dirname(__file__), 'dashboard_template.html'), encoding='utf-8').read()
     js = json.dumps(dados, ensure_ascii=False, default=str).replace('</script', '<\\/script')

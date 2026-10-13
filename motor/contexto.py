@@ -111,6 +111,8 @@ def carregar(pasta_entrada, log=print):
             'descricao_negocio': p.get('descricao_negocio', ''),
             'margem_liquida_estimada': p.get('margem_liquida_estimada', None),
             'faturamento_anual': p.get('faturamento_anual', None),
+            'data_abertura': p.get('data_abertura', ''),
+            'regimes_por_ano': p.get('regimes_por_ano', {}) or {},
         }
         if p.get('uf') and len(p['uf'].strip()) == 2:
             e['uf'] = p['uf'].strip().upper()

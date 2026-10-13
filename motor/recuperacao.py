@@ -71,6 +71,12 @@ def _limite(tese, periodo):
     return _soma_mes(marco, ANOS * 12)
 
 
+def _regime_periodo(regimes, cnpj, periodo):
+    """Regime do ano do período (EFD/perfil por ano); sem ele, o regime geral da empresa."""
+    r = regimes.get(cnpj) or {}
+    return (r.get('anos') or {}).get(str(periodo)[:4]) or r
+
+
 def montar(ctx, achados, hoje=None):
     hoje = hoje or datetime.date.today().strftime('%Y-%m')
     taxas = selic.carregar()
@@ -80,6 +86,8 @@ def montar(ctx, achados, hoje=None):
         r_ = e_.get('regime') or {}
         regimes[cnpj_] = {'pis_cofins': r_.get('pis_cofins', ''), 'tributario': r_.get('tributario', ''),
                           'lucro_real': r_.get('pis_cofins') in ('nao_cumulativo', 'misto') or str(r_.get('tributario', '')).startswith('Lucro Real')}
+        regimes[cnpj_]['anos'] = {ano: {'pis_cofins': x.get('pis_cofins', ''), 'tributario': x['regime'], 'lucro_real': x.get('lucro_real')}
+                                  for ano, x in (e_.get('regime_anos') or {}).items() if x.get('regime') != 'Não identificado'}
     brutas = []
     for a in achados:
         if a.get('categoria') not in CATEGORIAS:
@@ -87,13 +95,13 @@ def montar(ctx, achados, hoje=None):
         tese = T.tese_da_regra(a['regra'])
         if not tese:
             continue
-        rg = regimes.get(a.get('empresa'), {})
-        if rg.get('pis_cofins') and rg['pis_cofins'] not in tese.get('regimes', []):
-            continue   # tese de outro regime (ex.: crédito não cumulativo em empresa do Presumido)
         grau = base_legal.FUNDAMENTACAO.get(a['regra'], ('', 'c'))[1]
         for periodo, valor, ev in _periodos(a):
             if not re.match(r'^\d{4}-\d{2}$', periodo or ''):
                 continue
+            rg = _regime_periodo(regimes, a.get('empresa'), periodo)
+            if rg.get('pis_cofins') and rg['pis_cofins'] not in tese.get('regimes', []):
+                continue   # tese de outro regime no ano (ex.: crédito não cumulativo num ano de Presumido)
             brutas.append({'tese': tese, 'achado': a, 'periodo': periodo, 'valor': round(valor, 2), 'evidencia': ev, 'grau': grau,
                            'grupo': GRUPO_REGRA.get(a['regra'], tese['grupo'])})
     # dedupe: mesmo grupo de tese, empresa e período -> o maior
@@ -131,7 +139,7 @@ def montar(ctx, achados, hoje=None):
         ops.append({
             'id': oid, 'tese_id': tese['id'], 'tese': tese['nome'], 'tributo': tese['tributo'], 'grupo': grupo,
             'empresa': cnpj, 'nome': a.get('nome', ''), 'periodo': periodo, 'ano': periodo[:4],
-            'regime': (regimes.get(cnpj) or {}).get('tributario', '') or 'não identificado', 'lucro_real': bool((regimes.get(cnpj) or {}).get('lucro_real')),
+            'regime': _regime_periodo(regimes, cnpj, periodo).get('tributario', '') or 'não identificado', 'lucro_real': bool(_regime_periodo(regimes, cnpj, periodo).get('lucro_real')),
             'valor_original': b['valor'], 'valor_atualizado': valor_at, 'selic_pct': pct, 'selic_detalhe': det,
             'atualizacao': tese['atualizacao'], 'limite': limite, 'meses_para_prescrever': meses_rest, 'situacao': situacao,
             'comprovacao': 'Estimado' if estimado else 'Comprovado', 'seguranca': T.seguranca(tese, b['grau']),

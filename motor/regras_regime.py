@@ -43,7 +43,8 @@ def rodar(e, A):
         industrializacao_encomenda(e, s, A, base)
     for comp in sorted(e['contrib']):
         c = e['contrib'][comp]; base = dict(empresa=e['cnpj'], nome=e['nome'], periodo=comp, uf=e['uf'])
-        if r['pis_cofins'] in ('cumulativo', 'misto'):
+        pc_mes = {'1': 'nao_cumulativo', '2': 'cumulativo', '3': 'misto'}.get(str(c['empresa'].get('cod_inc_trib') or ''), r['pis_cofins'])
+        if pc_mes in ('cumulativo', 'misto'):
             base_cumulativa(e, c, A, base)
         conciliacao_receita(e, c, A, base)
         retencoes(e, c, A, base)

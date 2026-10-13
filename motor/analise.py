@@ -2,7 +2,7 @@
 """Orquestra a revisão: contexto -> regime -> regras -> consolidação -> achados fundamentados -> diagnóstico e resumo."""
 import re
 from collections import defaultdict, Counter
-from . import contexto, regras_fiscal, regras_contrib, regras_cruz, regras_regime, regras_recup, base_legal, diagnostico, setores
+from . import contexto, regras_fiscal, regras_contrib, regras_cruz, regras_regime, regras_recup, base_legal, diagnostico, setores, integridade
 from .util import brl, hash_curto
 
 ORDEM_PRIORIDADE = {'Alta': 0, 'Média': 1, 'Baixa': 2}
@@ -10,6 +10,7 @@ ORDEM_PRIORIDADE = {'Alta': 0, 'Média': 1, 'Baixa': 2}
 def executar(pasta_entrada, log=print):
     ctx = contexto.carregar(pasta_entrada, log=log)
     A = contexto.Achados()
+    integridade.preparar(ctx)   # regime de cada ano (as teses usam o regime do período)
     for cnpj, e in ctx['empresas'].items():
         e['regime'] = regras_regime.regime(e)
         e['setor'] = setores.inferir(e)
@@ -18,6 +19,7 @@ def executar(pasta_entrada, log=print):
         regras_regime.rodar(e, A)
         regras_recup.rodar(e, A)
     regras_cruz.rodar(ctx, A)
+    integridade.rodar(ctx, A)   # obrigações mês a mês e confronto SPED Fiscal × EFD Contribuições
     for cnpj, e in ctx['empresas'].items():
         e['diagnostico'] = diagnostico.montar(e)
     achados = consolidar(list(A))

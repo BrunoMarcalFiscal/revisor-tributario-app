@@ -71,6 +71,7 @@ dialog h2{font-size:16px;margin:0 0 12px}dialog label{display:block;font-size:12
   <h2>Cadastrar empresa</h2>
   <label>CNPJ<input id="e-cnpj" required placeholder="00.000.000/0000-00"></label>
   <label>Razão social<input id="e-nome" placeholder="busca automática pelo CNPJ"></label>
+  <label>Data de abertura<input id="e-abertura" type="date"></label>
   <label>Regime<select id="e-regime"><option value="">—</option><option>Lucro Real</option><option>Lucro Presumido</option><option>Simples Nacional</option></select></label>
   <div id="e-msg" class="small"></div>
   <div class="bar"><button type="button" class="btn" id="e-cancelar">Cancelar</button><button type="submit" class="btn p" id="e-salvar">Cadastrar</button></div>
@@ -132,12 +133,12 @@ $('#e-cancelar').onclick = () => dlg.close();
 $('#e-cnpj').addEventListener('blur', async () => {
   const c = $('#e-cnpj').value.replace(/\D/g, ''); if (c.length !== 14 || $('#e-nome').value) return;
   $('#e-msg').textContent = 'Buscando a razão social…';
-  try { const j = await api('/api/consulta-cnpj?cnpj=' + c); if (j.nome && !$('#e-nome').value) $('#e-nome').value = j.nome; $('#e-msg').textContent = j.nome ? '' : 'Não achei o nome; digite a razão social.'; }
+  try { const j = await api('/api/consulta-cnpj?cnpj=' + c); if (j.nome && !$('#e-nome').value) $('#e-nome').value = j.nome; if (j.abertura && !$('#e-abertura').value) $('#e-abertura').value = j.abertura; $('#e-msg').textContent = j.nome ? '' : 'A consulta pública do CNPJ não respondeu: digite a razão social e a abertura.'; }
   catch (e) { $('#e-msg').textContent = e.message; }
 });
 $('#form-emp').addEventListener('submit', async (ev) => {
   ev.preventDefault(); $('#e-salvar').disabled = true;
-  try { const j = await post('/api/empresas', { cnpj: $('#e-cnpj').value, nome: $('#e-nome').value, regime: $('#e-regime').value }); dlg.close(); await carregarEmpresas(); ir(j.cnpj); }
+  try { const j = await post('/api/empresas', { cnpj: $('#e-cnpj').value, nome: $('#e-nome').value, regime: $('#e-regime').value, abertura: $('#e-abertura').value }); dlg.close(); await carregarEmpresas(); ir(j.cnpj); }
   catch (e) { $('#e-msg').textContent = e.message; }
   finally { $('#e-salvar').disabled = false; }
 });
@@ -249,6 +250,12 @@ function desenharRevisao() {
   ligarRevisao(alvo, est, r);
 }
 
+function anosDaEmpresa(e, p) {
+  const anos = (e.periodos || []).map((x) => Number(String(x).slice(-4))).filter(Boolean);
+  const ab = Number(String(p.data_abertura || '').slice(0, 4)); if (ab) anos.push(ab);
+  const ini = Math.min(...anos.length ? anos : [new Date().getFullYear()]), fim = Math.max(new Date().getFullYear(), ...anos);
+  const out = []; for (let a = fim; a >= ini; a--) out.push(String(a)); return out;
+}
 function perfilHtml(est, r) {
   const emps = Object.values(est.empresas || {});
   if (!emps.length) return '<div class="small" style="margin-top:8px">O perfil aparece quando houver um SPED na revisão.</div>';
@@ -265,7 +272,10 @@ function perfilHtml(est, r) {
         <label>Regimes especiais / TTD (separar por ;)<input data-p="regimes_especiais" value="${esc((p.regimes_especiais || []).join('; '))}"></label>
         <label>O que a empresa faz<input data-p="descricao_negocio" value="${esc(p.descricao_negocio || '')}"></label>
         <label>Observações<input data-p="observacoes" value="${esc(p.observacoes || '')}"></label></div>
-      <label class="chk"><input type="checkbox" data-p="exporta" ${p.exporta ? 'checked' : ''}> Exporta</label></div>`; }).join('')}
+      <label class="chk"><input type="checkbox" data-p="exporta" ${p.exporta ? 'checked' : ''}> Exporta</label>
+      <div class="campos" style="margin-top:10px"><label>Data de abertura da empresa<input type="date" data-p="data_abertura" value="${esc(p.data_abertura || '')}"></label></div>
+      <div style="margin-top:10px"><div class="small" style="margin-bottom:6px">Regime por ano: deixe "pela EFD" para o motor ler o registro 0110 de cada ano; escolha só quando a EFD estiver errada ou faltar.</div>
+        <div class="campos" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${anosDaEmpresa(e, p).map((ano) => `<label>${ano}<select data-ano="${ano}">${[['', 'pela EFD'], ['Lucro Real', 'Lucro Real'], ['Lucro Presumido', 'Lucro Presumido'], ['Simples Nacional', 'Simples Nacional']].map(([k, t]) => `<option value="${k}"${((p.regimes_por_ano || {})[ano] || '') === k ? ' selected' : ''}>${t}</option>`).join('')}</select></label>`).join('')}</div></div></div>`; }).join('')}
     <button class="btn s" type="submit" style="margin-top:12px">Salvar perfil</button></form>`;
 }
 
@@ -303,6 +313,7 @@ function ligarRevisao(alvo, est, r) {
       bl.querySelectorAll('[data-p]').forEach((c) => { const k = c.dataset.p; let v = c.type === 'checkbox' ? c.checked : c.value.trim();
         if (k === 'beneficios' || k === 'regimes_especiais') v = v.split(';').map((x) => x.trim()).filter(Boolean);
         if (k === 'uf') v = v.toUpperCase(); p[k] = v; });
+      const rpa = {}; bl.querySelectorAll('[data-ano]').forEach((c) => { if (c.value) rpa[c.dataset.ano] = c.value; }); p.regimes_por_ano = rpa;
       out[bl.dataset.cnpj] = p; });
     try { await post(`/api/revisoes/${id}/perfil`, out, 'PUT'); S.msg = ['ok', 'Perfil salvo. Vale na próxima vez que gerar a revisão.']; await abrirRevisao(id, true); }
     catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); }
