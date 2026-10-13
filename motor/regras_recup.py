@@ -115,7 +115,7 @@ def confronto_itens(f, c, A, base):
         if dif:
             div.append('saída | chave %s (NF-e %s) | totais SPED Fiscal × itens EFD Contribuições: %s' % (chave, d.get('NUM_DOC'), '; '.join(dif)))
     if div:
-        A.add(regra='X14', categoria='Risco', tributo='SPED', titulo='%d item(ns) divergente(s) entre SPED Fiscal e EFD Contribuições (mesma chave e item)' % len(div),
+        A.add(regra='X14', grau='Médio', categoria='Risco', tributo='SPED', titulo='%d item(ns) divergente(s) entre SPED Fiscal e EFD Contribuições (mesma chave e item)' % len(div),
               descricao='O mesmo item da mesma NF-e foi escriturado com CFOP, código, valor, ICMS ou IPI diferentes nos dois arquivos. A RFB e a SEFAZ cruzam as duas escriturações; a divergência de valor afeta a base do PIS/COFINS.',
               valor=round(impacto, 2), estimativa=True, evidencia=div[:200],
               memoria='Impacto estimado: diferença de valor/desconto × 9,25%% (alíquota não cumulativa de referência) = %s.' % brl(impacto),
@@ -143,7 +143,7 @@ def entradas_fora_da_efd(f, c, A, base, reg, comp):
             faltam.append('NF-e %s | %s | %s | base de crédito %s' % (d.get('NUM_DOC'), chave, part.get('NOME', d.get('COD_PART', '')), brl(b)))
     if faltam:
         cred = total_base * 0.0925
-        A.add(regra='X15', categoria='Recuperação', tributo='PIS/COFINS', titulo='%d NF-e de entrada com direito a crédito no SPED Fiscal e fora da EFD Contribuições' % len(faltam),
+        A.add(regra='X15', grau='Médio', categoria='Recuperação', tributo='PIS/COFINS', titulo='%d NF-e de entrada com direito a crédito no SPED Fiscal e fora da EFD Contribuições' % len(faltam),
               descricao='Entradas de insumo ou revenda escrituradas no SPED Fiscal não aparecem na EFD Contribuições do mesmo mês: o crédito de PIS/COFINS não foi considerado.',
               valor=round(cred, 2), estimativa=True, evidencia=faltam[:200],
               memoria='Base %s (valor do item − desconto%s) × 9,25%% = %s. Confirmar a natureza de insumo/revenda de cada item.' % (brl(total_base), ' − ICMS, desde 05/2023' if comp >= '2023-05' else '', brl(cred)),
@@ -158,7 +158,7 @@ def icms_saidas(f, c, A, base):
         if b and abs(a.n('VL_ICMS') - b.n('VL_ICMS')) > TOL:
             div.append('NF-e %s | %s | ICMS SPED Fiscal %s × EFD Contribuições %s' % (a.get('NUM_DOC'), chave, brl(a.n('VL_ICMS')), brl(b.n('VL_ICMS'))))
     if div:
-        A.add(regra='X16', categoria='Risco', tributo='PIS/COFINS', titulo='%d NF-e de saída com ICMS diferente entre SPED Fiscal e EFD Contribuições' % len(div),
+        A.add(regra='X16', grau='Médio', categoria='Risco', tributo='PIS/COFINS', titulo='%d NF-e de saída com ICMS diferente entre SPED Fiscal e EFD Contribuições' % len(div),
               descricao='A exclusão do ICMS da base do PIS/COFINS (Tema 69) usa o ICMS destacado; se a EFD Contribuições informa outro valor, a base e a recuperação ficam distorcidas.',
               valor=0.0, evidencia=div[:200], acao='Conferir o ICMS destacado no XML e corrigir a escrituração divergente.', prioridade='Média', **base)
 
@@ -181,7 +181,7 @@ def icms_st_base(e, f, A, base, reg):
         return
     aliq = 0.0925 if reg in ('nao_cumulativo', 'misto') else 0.0365
     v = st_ent * aliq
-    A.add(regra='T02', categoria='Pago a maior', tributo='PIS/COFINS', titulo='ICMS-ST das compras para revenda dentro da base do PIS/COFINS (Tema 1.125 STJ)',
+    A.add(regra='T02', grau='Médio', categoria='Pago a maior', tributo='PIS/COFINS', titulo='ICMS-ST das compras para revenda dentro da base do PIS/COFINS (Tema 1.125 STJ)',
           descricao='A empresa compra com ICMS-ST e revende (CST 60): o ICMS-ST embutido no preço de venda integrou a receita tributada pelo PIS/COFINS. O STJ (Tema 1.125) afastou essa inclusão para o substituído.',
           valor=round(v, 2), estimativa=True, evidencia=['ICMS-ST das entradas para revenda no mês: %s' % brl(st_ent)],
           memoria='ICMS-ST das entradas para revenda %s × %s%% = %s (proxy do ICMS-ST embutido nas vendas do mês; refinar com o custo das mercadorias vendidas).' % (brl(st_ent), str(round(aliq * 100, 2)).replace('.', ','), brl(v)),
@@ -206,7 +206,7 @@ def devolucoes_sem_credito(c, A, base, comp):
             lin.append('NF-e %s | %s | item %s %s | CFOP %s | CST PIS %s | base %s' % (d.get('NUM_DOC'), d.get('CHV_NFE'), it.get('NUM_ITEM'), it.get('COD_ITEM'), it.get('CFOP'), it.get('CST_PIS'), brl(b)))
     if lin:
         v = total * 0.0925
-        A.add(regra='T21', categoria='Recuperação', tributo='PIS/COFINS', titulo='Devolução de venda escriturada sem crédito de PIS/COFINS (%d item(ns))' % len(lin),
+        A.add(regra='T21', grau='Médio', categoria='Recuperação', tributo='PIS/COFINS', titulo='Devolução de venda escriturada sem crédito de PIS/COFINS (%d item(ns))' % len(lin),
               descricao='Entradas de devolução de venda com CST sem crédito na EFD Contribuições. No regime não cumulativo, a devolução de venda tributada dá crédito (Lei 10.833/2003, art. 3º, VIII).',
               valor=round(v, 2), estimativa=False, evidencia=lin[:200],
               memoria='Base %s (valor − desconto%s) × 9,25%% = %s.' % (brl(total), ' − ICMS, desde 05/2023' if comp >= '2023-05' else '', brl(v)),
@@ -225,7 +225,7 @@ def f100_sem_credito(c, A, base):
         lin.append('F100 linha %s | %s | %s | CST %s | natureza %s | %s' % (r['linha'], r.get('DT_OPER'), (r.get('DESC_DOC_OPER') or r.get('COD_ITEM') or '')[:60], r.get('CST_PIS'), r.get('NAT_BC_CRED') or '-', brl(r.n('VL_OPER'))))
     if lin:
         v = tot * 0.0925
-        A.add(regra='T27', categoria='Recuperação', tributo='PIS/COFINS', titulo='%d operação(ões) de aquisição no F100 sem crédito de PIS/COFINS' % len(lin),
+        A.add(regra='T27', grau='Médio', categoria='Recuperação', tributo='PIS/COFINS', titulo='%d operação(ões) de aquisição no F100 sem crédito de PIS/COFINS' % len(lin),
               descricao='Custos e despesas informados no F100 como operação com direito a crédito (IND_OPER 0), mas sem PIS/COFINS apurado: aluguel de prédio, máquina e equipamento pago a PJ, arrendamento mercantil, armazenagem e outros do art. 3º.',
               valor=round(v, 2), estimativa=True, evidencia=lin[:200], memoria='Valor das operações %s × 9,25%% = %s (confirmar a natureza de cada uma).' % (brl(tot), brl(v)),
               acao='Classificar a natureza (NAT_BC_CRED) e retificar o F100 com CST de crédito.', prioridade='Média', **base)
@@ -250,7 +250,7 @@ def importacao_sem_credito(c, A, base):
             lin.append('NF-e %s | %s | item %s %s | CFOP %s | CST %s | %s' % (d.get('NUM_DOC'), d.get('CHV_NFE'), it.get('NUM_ITEM'), it.get('COD_ITEM'), it.get('CFOP'), it.get('CST_PIS'), brl(b)))
     if lin:
         v = tot * 0.1175
-        A.add(regra='T28', categoria='Recuperação', tributo='PIS/COFINS', titulo='Importação sem crédito do PIS/COFINS-Importação (%d item(ns))' % len(lin),
+        A.add(regra='T28', grau='Alto', categoria='Recuperação', tributo='PIS/COFINS', titulo='Importação sem crédito do PIS/COFINS-Importação (%d item(ns))' % len(lin),
               descricao='Bens importados para revenda ou como insumo escriturados sem crédito. No não cumulativo, o PIS/COFINS-Importação pago dá direito a crédito (Lei 10.865/2004, art. 15).',
               valor=round(v, 2), estimativa=True, evidencia=lin[:200],
               memoria='Base %s × 11,75%% (2,1%% + 9,65%%, alíquotas gerais) = %s. O valor exato é o PIS/COFINS-Importação pago na DI/DUIMP (conferir alíquota do NCM).' % (brl(tot), brl(v)),
@@ -268,7 +268,7 @@ def iss_na_base(c, A, base, reg):
     if n:
         aliq = 0.0925 if reg in ('nao_cumulativo', 'misto') else 0.0365
         v = iss * aliq
-        A.add(regra='T29', categoria='Pago a maior', tributo='PIS/COFINS', titulo='ISS dentro da base do PIS/COFINS em %d NFS-e emitida(s) (Tema 118 STF)' % n,
+        A.add(regra='T29', grau='Médio', categoria='Pago a maior', tributo='PIS/COFINS', titulo='ISS dentro da base do PIS/COFINS em %d NFS-e emitida(s) (Tema 118 STF)' % n,
               descricao='A base de PIS/COFINS das NFS-e inclui o ISS. A exclusão do ISS (por analogia ao Tema 69) está no Tema 118 do STF; não é aplicada pela RFB: depende de ação judicial.',
               valor=round(v, 2), estimativa=True, evidencia=['ISS das NFS-e emitidas no mês: %s em %d nota(s)' % (brl(iss), n)],
               memoria='ISS %s × %s%% = %s.' % (brl(iss), str(round(aliq * 100, 2)).replace('.', ','), brl(v)), acao='Avaliar ação judicial (tese controvertida).', prioridade='Baixa', **base)
@@ -284,7 +284,7 @@ def retencoes_f600(c, A, base):
     ded_c = sum(r.n('VL_RET_NC') + r.n('VL_RET_CUM') for r in c['regs'].get('M600', []))
     sobra = max(ret_p - ded_p, 0) + max(ret_c - ded_c, 0)
     if sobra > TOL:
-        A.add(regra='R06', categoria='Recuperação', tributo='PIS/COFINS', titulo='Retenções de PIS/COFINS na fonte (F600) não deduzidas na apuração: %s' % brl(sobra),
+        A.add(regra='R06', grau='Alto', categoria='Recuperação', tributo='PIS/COFINS', titulo='Retenções de PIS/COFINS na fonte (F600) não deduzidas na apuração: %s' % brl(sobra),
               descricao='Retido (F600): PIS %s, COFINS %s; deduzido (M200/M600): PIS %s, COFINS %s. O retido e não deduzido pode ser deduzido nos meses seguintes ou pedido em PER/DCOMP.' % (brl(ret_p), brl(ret_c), brl(ded_p), brl(ded_c)),
               valor=round(sobra, 2), evidencia=['F600 linha %s | %s | CNPJ fonte %s | PIS %s | COFINS %s' % (r['linha'], r.get('DT_RET'), r.get('CNPJ'), brl(r.n('VL_RET_PIS')), brl(r.n('VL_RET_COFINS'))) for r in f6[:100]],
               memoria='(retido − deduzido) de PIS e de COFINS = %s.' % brl(sobra), acao='Deduzir no mês seguinte ou PER/DCOMP do saldo retido (5 anos).', prioridade='Alta', **base)
@@ -303,7 +303,7 @@ def ipi_devolucoes(f, A, base):
                 tot += it.n('VL_IPI')
                 lin.append('NF-e %s | %s | item %s | CFOP %s | CST IPI %s | IPI %s' % (d.get('NUM_DOC'), d.get('CHV_NFE'), it.get('NUM_ITEM'), it.get('CFOP'), it.get('CST_IPI'), brl(it.n('VL_IPI'))))
     if lin:
-        A.add(regra='T31', categoria='Recuperação', tributo='IPI', titulo='Devolução de venda com IPI destacado sem crédito de IPI (%d item(ns))' % len(lin),
+        A.add(regra='T31', grau='Alto', categoria='Recuperação', tributo='IPI', titulo='Devolução de venda com IPI destacado sem crédito de IPI (%d item(ns))' % len(lin),
               descricao='O IPI destacado na venda e devolvido pelo cliente pode ser creditado (RIPI, art. 229). A entrada da devolução foi escriturada sem o crédito.',
               valor=round(tot, 2), evidencia=lin[:200], memoria='Soma do IPI das devoluções sem crédito = %s.' % brl(tot),
               acao='Escriturar o crédito de IPI (CST 00) e rever o saldo do E520.', prioridade='Média', **base)
@@ -320,7 +320,7 @@ def credito_presumido_icms_irpj(f, A, base):
         tot += r.n('VL_AJ_APUR'); lin.append('E111 %s | %s | %s' % (r.get('COD_AJ_APUR'), (r.get('DESCR_COMPL_AJ') or '')[:80], brl(r.n('VL_AJ_APUR'))))
     if tot > 0:
         v = tot * 0.34
-        A.add(regra='T32', categoria='Pago a maior', tributo='IRPJ/CSLL', titulo='Crédito presumido de ICMS de %s: verificar exclusão do IRPJ/CSLL' % brl(tot),
+        A.add(regra='T32', grau='Médio', categoria='Pago a maior', tributo='IRPJ/CSLL', titulo='Crédito presumido de ICMS de %s: verificar exclusão do IRPJ/CSLL' % brl(tot),
               descricao='O crédito presumido de ICMS não é receita tributável pelo IRPJ/CSLL (STJ, EREsp 1.517.492/PR) até 12/2023; a partir de 2024 vale a Lei 14.789/2023. Se foi tributado no Lucro Real, há IRPJ/CSLL a recuperar.',
               valor=round(v, 2), estimativa=True, evidencia=lin[:100], memoria='Crédito presumido %s × 34%% (IRPJ 25%% + CSLL 9%%, alíquota máxima) = %s. Confirmar na ECF se foi excluído no LALUR/LACS.' % (brl(tot), brl(v)),
               acao='Conferir a ECF; se tributado, retificar a ECF e pedir PER/DCOMP do saldo negativo/pagamento a maior.', prioridade='Média', **base)

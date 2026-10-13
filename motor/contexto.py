@@ -15,6 +15,8 @@ class Achados(list):
         a.setdefault('memoria', '')
         a.setdefault('estimativa', False)
         a.setdefault('prioridade', 'Média')
+        a.setdefault('grau', 'Médio')  # regra que esqueça o grau não pode derrubar o painel inteiro
+        a.setdefault('acao', 'Verificar')
         self.append(a)
         return a
 
