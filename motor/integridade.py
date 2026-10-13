@@ -239,6 +239,7 @@ def _comparar_doc(df, dc, tipo):
 
 
 ENTREGA_FUTURA = {'5116', '5117', '6116', '6117'}
+VENDA_ATIVO = {'5551', '6551', '7551'}
 
 
 def _classificar_so_fiscal(d, saida, cfops, cumulativo):
@@ -247,9 +248,11 @@ def _classificar_so_fiscal(d, saida, cfops, cumulativo):
     if d.get('COD_SIT') in CANCELADAS:
         return 'info', 'documento cancelado/denegado (informativo)'
     if saida:
-        receita = [c for c in cfops if c in CFOP_RECEITA and c not in ENTREGA_FUTURA]
+        receita = [c for c in cfops if c in CFOP_RECEITA and c not in ENTREGA_FUTURA and c not in VENDA_ATIVO]
         if receita:
             return 'alta', 'venda com receita (CFOP %s) fora da EFD Contribuições: receita fora da base do PIS/COFINS' % '/'.join(receita)
+        if set(cfops) & VENDA_ATIVO:
+            return 'info', 'venda de bem do ativo imobilizado: fora da receita bruta do PIS/COFINS (Lei 9.718/1998, art. 3º, § 2º, IV; Lei 10.637/2002 e 10.833/2003, art. 1º, § 3º); conferir o ganho de capital no IRPJ/CSLL'
         if set(cfops) & ENTREGA_FUTURA:
             return 'media', 'venda para entrega futura: a receita costuma ser reconhecida no faturamento antecipado (5922/6922); conferir se o faturamento está na EFD'
         return 'info', 'saída sem receita (remessa, retorno, devolução, transferência): escrituração na EFD Contribuições facultativa'
