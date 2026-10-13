@@ -187,12 +187,18 @@ def progresso(rid):
 
 
 def nome_por_cnpj(cnpj):
-    try:
-        with urllib.request.urlopen('https://brasilapi.com.br/api/cnpj/v1/%s' % cnpj, timeout=8) as resp:
-            j = json.loads(resp.read().decode('utf-8'))
-        return j.get('razao_social') or ''
-    except Exception:
-        return ''
+    """Razão social pelas bases públicas (BrasilAPI e CNPJ.ws). Falhou: devolve vazio e a tela pede o nome."""
+    fontes = [('https://brasilapi.com.br/api/cnpj/v1/%s', 'razao_social'), ('https://publica.cnpj.ws/cnpj/%s', 'razao_social')]
+    for url, campo in fontes:
+        try:
+            req = urllib.request.Request(url % cnpj, headers={'User-Agent': 'Mozilla/5.0 (Revisor Tributario; Marcal Contabilidade)', 'Accept': 'application/json'})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                nome = (json.loads(resp.read().decode('utf-8')).get(campo) or '').strip()
+            if nome:
+                return nome
+        except Exception:
+            continue
+    return ''
 
 
 # ── sessão ───────────────────────────────────────────────────────────────────
