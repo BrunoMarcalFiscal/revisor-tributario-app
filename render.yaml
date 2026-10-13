@@ -1,0 +1,23 @@
+# Revisor Tributário (web): uma revisão por empresa, login obrigatório. Nada transmite nem retifica.
+services:
+  - type: web
+    name: revisor-tributario
+    runtime: python
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 web.py
+    healthCheckPath: /saude
+    disk:
+      name: dados
+      mountPath: /dados
+      sizeGB: 5
+    envVars:
+      - key: REVISOR_DADOS
+        value: /dados
+      - key: REVISOR_USUARIO
+        sync: false
+      - key: REVISOR_SENHA
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.9.18

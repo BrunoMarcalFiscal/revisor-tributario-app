@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Revisor Tributário</title>
+<style>
+:root{color-scheme:light;--bg:#f4f5f8;--surface:#fff;--surface-2:#f0f2f6;--line:#d9dce4;--line-soft:#e7e9ef;--text:#141824;--muted:#6b7385;--navy:#212E50;--accent:#2a5fb0;
+--ok:#1F7A3A;--ok-bg:rgba(46,158,91,.12);--info:#1B4FA0;--info-bg:rgba(27,79,160,.10);--warn:#9A6400;--warn-bg:rgba(154,100,0,.12);--crit:#B3261E;--crit-bg:rgba(210,84,75,.13);--neutro:#5A6570;--neutro-bg:rgba(138,141,147,.12)}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#12151d;--surface:#1a1e28;--surface-2:#222735;--line:#2f3546;--line-soft:#262b38;--text:#f2f3f7;--muted:#8d93a3;--navy:#1b2440;--accent:#5486D1;
+--ok:#6fd08f;--info:#79ADE0;--warn:#e6b450;--crit:#ef8b84;--neutro:#aab1bf}}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px}header b{font-size:16px}header .sub{opacity:.7;font-size:12.5px}header a{color:#fff;opacity:.8;margin-left:auto;font-size:13px;text-decoration:none}
+main{max-width:1500px;margin:0 auto;padding:18px 16px 60px}
+.intro{color:var(--muted);font-size:13px;margin:0 0 16px}
+.grade{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.grade{grid-template-columns:1fr}.lista{position:static!important;max-height:none!important}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.lista{position:sticky;top:12px;display:flex;flex-direction:column;max-height:calc(100vh - 110px);overflow:hidden}
+.lista .topo{padding:12px;border-bottom:1px solid var(--line)}
+.lista .itens{overflow-y:auto}
+.emp{display:block;width:100%;text-align:left;padding:9px 12px;border:0;border-bottom:1px solid var(--line-soft);border-left:3px solid transparent;background:transparent;color:var(--text);cursor:pointer;font:inherit}
+.emp:hover{background:var(--surface-2)}.emp.on{background:var(--info-bg);border-left-color:var(--accent)}.emp .n{font-size:13px;font-weight:500;line-height:1.3}.emp.on .n{font-weight:700}
+.emp .m{display:flex;gap:6px;align-items:center;margin-top:3px;font-size:11.5px;color:var(--muted)}.emp .m .q{margin-left:auto}
+input,select{font:inherit;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+label.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:8px}label.chk input{width:auto}
+.btn{font:inherit;font-size:13px;font-weight:600;border-radius:8px;padding:7px 12px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}.btn.p{background:var(--accent);border-color:var(--accent);color:#fff}.btn.p:hover{filter:brightness(1.07)}.btn.s{padding:4px 10px;font-size:12px}.btn.g{border-color:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.selo{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.ok{color:var(--ok);background:var(--ok-bg)}.info{color:var(--info);background:var(--info-bg)}.warn{color:var(--warn);background:var(--warn-bg)}.crit{color:var(--crit);background:var(--crit-bg)}.neutro{color:var(--neutro);background:var(--neutro-bg)}
+.aviso{padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;line-height:1.45}
+.cab{padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.cab .t{flex:1;min-width:0}.cab .t b{font-size:15px}.small{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600;padding:8px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+td{padding:8px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}tr.clic{cursor:pointer}tr.clic:hover td{background:var(--surface-2)}tr.on td{background:var(--info-bg)}
+.r{text-align:right}.c{text-align:center}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));border-bottom:1px solid var(--line)}.kpis div{padding:10px 16px;border-right:1px solid var(--line-soft)}
+.kpis small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}.kpis b{font-size:16px}
+.abas{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid var(--line);align-items:center}
+.aba{border:0;background:transparent;padding:8px 12px;font:inherit;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}.aba.on{color:var(--text);font-weight:700;border-bottom-color:var(--accent)}.aba:disabled{opacity:.5;cursor:not-allowed}
+.corpo{padding:16px}
+.quadros{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.quadro{border:1px dashed var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;min-height:112px;background:var(--surface-2)}.quadro.sobre{border-style:solid;border-color:var(--accent);background:var(--info-bg)}
+.quadro .t{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;font-size:13px;font-weight:600;line-height:1.3}.quadro .acoes{display:flex;gap:6px;margin-top:auto}
+.caixa{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px}
+h3{font-size:14px;margin:20px 0 6px}
+pre{margin:0;max-height:160px;overflow:auto;font-size:11.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap}
+.campos{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}.campos.l{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));margin-top:10px}
+.campos label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+iframe{width:100%;height:calc(100vh - 200px);min-height:620px;border:1px solid var(--line);border-radius:8px}
+.vazio{padding:22px;color:var(--muted);font-size:13.5px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);padding:20px;width:min(440px,92vw)}dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h2{font-size:16px;margin:0 0 12px}dialog label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:10px}dialog .bar{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.nome-sped{max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style></head><body>
+<header><b>Revisor Tributário</b><span class="sub">Marçal Contabilidade</span><a href="/sair">Sair</a></header>
+<main>
+  <p class="intro">SPED e XML de cada empresa: recuperação de créditos dos últimos 5 anos, teses do Lucro Real e análise estratégica. Cada empresa tem as próprias revisões. Nada é transmitido nem retificado daqui.</p>
+  <div id="erro"></div>
+  <div class="grade">
+    <div class="card lista">
+      <div class="topo">
+        <div style="display:flex;gap:8px"><input id="busca" placeholder="Buscar empresa ou CNPJ"><button class="btn p" id="nova-emp" title="Cadastrar empresa">+</button></div>
+        <label class="chk"><input type="checkbox" id="so-real"> Só Lucro Real</label>
+      </div>
+      <div class="itens" id="empresas"></div>
+    </div>
+    <div id="direita" style="min-width:0"></div>
+  </div>
+</main>
+
+<dialog id="dlg-emp"><form method="dialog" id="form-emp">
+  <h2>Cadastrar empresa</h2>
+  <label>CNPJ<input id="e-cnpj" required placeholder="00.000.000/0000-00"></label>
+  <label>Razão social<input id="e-nome" placeholder="busca automática pelo CNPJ"></label>
+  <label>Regime<select id="e-regime"><option value="">—</option><option>Lucro Real</option><option>Lucro Presumido</option><option>Simples Nacional</option></select></label>
+  <div id="e-msg" class="small"></div>
+  <div class="bar"><button type="button" class="btn" id="e-cancelar">Cancelar</button><button type="submit" class="btn p" id="e-salvar">Cadastrar</button></div>
+</form></dialog>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const brl = (v) => (v == null || !isFinite(Number(v))) ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const cnpjFmt = (c) => { const d = String(c || '').replace(/\D/g, ''); return d.length === 14 ? `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}` : (c || ''); };
+const quando = (s) => { if (!s) return ''; const d = new Date(String(s)); return isNaN(d) ? '' : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); };
+const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const SIT = { rascunho: ['Em montagem', 'neutro'], rodando: ['Revisando…', 'info'], pronta: ['Pronta', 'ok'], erro: ['Erro', 'crit'] };
+const CURTO = { 'Lucro Real': 'Real', 'Lucro Presumido': 'Presumido', 'Simples Nacional': 'Simples' };
+
+async function api(url, opt = {}) {
+  const r = await fetch(url, opt);
+  if (r.status === 401) { location.href = '/login'; throw new Error('Sessão encerrada'); }
+  let j = null; try { j = await r.json(); } catch (_) {}
+  if (!r.ok) throw new Error((j && j.erro) || r.statusText);
+  return j;
+}
+const post = (url, corpo, metodo = 'POST') => api(url, { method: metodo, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo || {}) });
+function enviarArquivos(url, arquivos, onPct) {
+  return new Promise((ok, falha) => {
+    const fd = new FormData(); arquivos.forEach((f) => fd.append('arquivo', f, f.name));
+    const x = new XMLHttpRequest(); x.open('POST', url);
+    x.upload.onprogress = (e) => e.lengthComputable && onPct(Math.round(e.loaded / e.total * 100));
+    x.onload = () => { let j = null; try { j = JSON.parse(x.responseText); } catch (_) {} if (x.status === 401) location.href = '/login'; x.status < 300 ? ok(j) : falha(new Error((j && j.erro) || 'Falhou')); };
+    x.onerror = () => falha(new Error('Sem conexão'));
+    x.send(fd);
+  });
+}
+const aviso = (cor, texto) => `<div class="aviso ${cor}">${esc(texto)}</div>`;
+
+const S = { empresas: [], cnpj: null, revisoes: [], rev: null, est: null, aba: null, prog: null, msg: null, envio: null, timer: null };
+function lerUrl() { const u = new URLSearchParams(location.search); S.cnpj = u.get('empresa'); S.rev = Number(u.get('revisao')) || null; }
+function ir(cnpj, rev) { if (rev !== S.rev) { S.msg = null; S.prog = null; S.est = null; clearTimeout(S.timer); } const u = new URLSearchParams(); if (cnpj) u.set('empresa', cnpj); if (rev) u.set('revisao', rev); history.pushState(null, '', '?' + u); lerUrl(); carregarRevisoes(); }
+window.addEventListener('popstate', () => { lerUrl(); carregarRevisoes(); });
+
+async function carregarEmpresas() {
+  try { S.empresas = (await api('/api/empresas')).empresas; desenharEmpresas(); }
+  catch (e) { $('#erro').innerHTML = aviso('crit', e.message); }
+}
+function desenharEmpresas() {
+  const q = semAcento($('#busca').value), dig = $('#busca').value.replace(/\D/g, ''), soReal = $('#so-real').checked;
+  const l = S.empresas.filter((e) => (!soReal || e.regime === 'Lucro Real') && (!q || semAcento(e.nome).includes(q) || (dig.length >= 3 && e.cnpj.includes(dig))));
+  $('#empresas').innerHTML = l.map((e) => `<button class="emp${e.cnpj === S.cnpj ? ' on' : ''}" data-cnpj="${e.cnpj}"><div class="n">${esc(e.nome)}</div>
+    <div class="m"><span>${cnpjFmt(e.cnpj)}</span>${e.regime ? `<span class="selo ${e.regime === 'Lucro Real' ? 'info' : 'neutro'}">${CURTO[e.regime] || esc(e.regime)}</span>` : ''}${e.revisoes ? `<span class="q">${e.revisoes} revis${e.revisoes === 1 ? 'ão' : 'ões'}</span>` : ''}</div></button>`).join('')
+    || `<div class="vazio">${S.empresas.length ? 'Nenhuma empresa encontrada.' : 'Nenhuma empresa ainda. Clique em + para cadastrar.'}</div>`;
+}
+$('#empresas').addEventListener('click', (e) => { const b = e.target.closest('.emp'); if (b) ir(b.dataset.cnpj); });
+$('#busca').addEventListener('input', desenharEmpresas); $('#so-real').addEventListener('change', desenharEmpresas);
+
+// cadastro de empresa
+const dlg = $('#dlg-emp');
+$('#nova-emp').onclick = () => { $('#form-emp').reset(); $('#e-msg').textContent = ''; dlg.showModal(); $('#e-cnpj').focus(); };
+$('#e-cancelar').onclick = () => dlg.close();
+$('#e-cnpj').addEventListener('blur', async () => {
+  const c = $('#e-cnpj').value.replace(/\D/g, ''); if (c.length !== 14 || $('#e-nome').value) return;
+  $('#e-msg').textContent = 'Buscando a razão social…';
+  try { const j = await api('/api/consulta-cnpj?cnpj=' + c); if (j.nome && !$('#e-nome').value) $('#e-nome').value = j.nome; $('#e-msg').textContent = j.nome ? '' : 'Não achei o nome; digite a razão social.'; }
+  catch (e) { $('#e-msg').textContent = e.message; }
+});
+$('#form-emp').addEventListener('submit', async (ev) => {
+  ev.preventDefault(); $('#e-salvar').disabled = true;
+  try { const j = await post('/api/empresas', { cnpj: $('#e-cnpj').value, nome: $('#e-nome').value, regime: $('#e-regime').value }); dlg.close(); await carregarEmpresas(); ir(j.cnpj); }
+  catch (e) { $('#e-msg').textContent = e.message; }
+  finally { $('#e-salvar').disabled = false; }
+});
+
+async function carregarRevisoes() {
+  desenharEmpresas();
+  const pedido = S.cnpj;
+  if (!pedido) { S.revisoes = []; desenharDireita(); return; }
+  S.revisoes = []; desenharDireita();
+  try {
+    const j = await api('/api/revisoes?cnpj=' + pedido);
+    if (S.cnpj !== pedido) return;
+    S.revisoes = j.revisoes.filter((r) => r.cnpj === pedido);
+    desenharDireita();
+    if (S.rev && S.revisoes.some((r) => r.id === S.rev)) abrirRevisao(S.rev); else { S.est = null; }
+  } catch (e) { $('#erro').innerHTML = aviso('crit', e.message); }
+}
+
+function desenharDireita() {
+  const emp = S.empresas.find((e) => e.cnpj === S.cnpj);
+  const el = $('#direita');
+  if (!emp) { el.innerHTML = '<div class="card vazio">Escolha uma empresa ao lado (ou cadastre uma em +). Cada empresa tem as próprias revisões, com arquivos, perfil e status de recuperação separados.</div>'; return; }
+  const linhas = S.revisoes.map((r) => { const [rot, cor] = SIT[r.rodando ? 'rodando' : r.situacao] || SIT.rascunho; const res = r.resumo || {};
+    return `<tr class="clic${r.id === S.rev ? ' on' : ''}" data-rev="${r.id}"><td><b style="font-weight:${r.id === S.rev ? 700 : 500}">${esc(r.titulo)}</b></td><td class="c"><span class="selo ${cor}">${rot}</span></td>
+      <td class="r">${r.resumo ? brl(res.potencial) : '—'}</td><td class="r">${res.oportunidades ?? '—'}</td><td class="c small">${quando(r.atualizado_em)}</td>
+      <td class="r"><button class="btn s g" data-arquivar="${r.id}">Arquivar</button></td></tr>`; }).join('');
+  el.innerHTML = `<div class="card" style="margin-bottom:16px">
+    <div class="cab" style="${S.revisoes.length ? '' : 'border-bottom:0'}"><div class="t"><b>${esc(emp.nome)}</b><div class="small">${cnpjFmt(emp.cnpj)} · ${esc(emp.regime || 'regime não informado')}</div></div>
+      <button class="btn p s" id="nova-rev">Nova revisão</button></div>
+    ${S.revisoes.length ? `<table><thead><tr><th>Revisão</th><th class="c">Situação</th><th class="r">Potencial em prazo</th><th class="r">Oportunidades</th><th class="c">Atualizada</th><th></th></tr></thead><tbody>${linhas}</tbody></table>` : ''}
+  </div>
+  ${S.revisoes.length ? '<div id="revisao"></div>' : '<div class="card vazio">Esta empresa ainda não tem revisão. Clique em "Nova revisão" e envie o SPED Fiscal, a EFD Contribuições e, se tiver, os XML das notas.</div>'}`;
+  $('#nova-rev').onclick = async () => { try { const r = await post('/api/revisoes', { cnpj: emp.cnpj }); await carregarEmpresas(); ir(emp.cnpj, r.id); } catch (e) { $('#erro').innerHTML = aviso('crit', e.message); } };
+  el.querySelectorAll('tr[data-rev]').forEach((tr) => tr.onclick = () => ir(emp.cnpj, Number(tr.dataset.rev)));
+  el.querySelectorAll('[data-arquivar]').forEach((b) => b.onclick = async (ev) => {
+    ev.stopPropagation(); const r = S.revisoes.find((x) => x.id === Number(b.dataset.arquivar));
+    if (!confirm(`Arquivar "${r.titulo}"? Some da lista; os arquivos continuam guardados.`)) return;
+    try { await api('/api/revisoes/' + r.id, { method: 'DELETE' }); await carregarEmpresas(); ir(emp.cnpj, S.rev === r.id ? null : S.rev); } catch (e) { $('#erro').innerHTML = aviso('crit', e.message); }
+  });
+  if (S.est && S.est.revisao.id === S.rev) desenharRevisao();
+}
+
+async function abrirRevisao(id, manterAba) {
+  try {
+    const e = await api('/api/revisoes/' + id);
+    if (S.rev !== id) return;
+    S.est = e; if (!manterAba) S.aba = e.tem_dashboard ? 'painel' : 'arquivos';
+    if (e.progresso && e.progresso.rodando) { S.prog = e.progresso; acompanhar(); }
+    desenharRevisao();
+  } catch (err) { const r = $('#revisao'); if (r) r.innerHTML = aviso('crit', err.message); }
+}
+
+function acompanhar() {
+  clearTimeout(S.timer);
+  S.timer = setTimeout(async () => {
+    const id = S.rev;
+    try {
+      const p = await api(`/api/revisoes/${id}/progresso`); S.prog = p;
+      if (p.rodando) { desenharRevisao(); return acompanhar(); }
+      S.msg = p.erro ? ['crit', 'A revisão falhou: ' + p.erro] : ['ok', 'Revisão gerada.'];
+      if (!p.erro) S.aba = 'painel';
+      await carregarRevisoes(); await carregarEmpresas();
+    } catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); }
+  }, 1500);
+}
+
+function desenharRevisao() {
+  const alvo = $('#revisao'); if (!alvo || !S.est) return;
+  const est = S.est, r = est.revisao, rodando = !!(S.prog && S.prog.rodando);
+  const [rot, cor] = SIT[rodando ? 'rodando' : r.situacao] || SIT.rascunho;
+  const res = r.resumo || {};
+  const speds = (est.arquivos || []).filter((a) => a.tipo !== 'XML');
+  const temSped = speds.some((a) => a.cnpj);
+  const outros = est.cnpjs_de_outra_empresa || [];
+  const bloq = !!S.envio || rodando;
+  let corpo = '';
+  if (S.msg) corpo += aviso(S.msg[0], S.msg[1]);
+  if (rodando) corpo += aviso('info', 'Revisando os arquivos. Pode sair da tela: a revisão continua e fica salva nesta empresa.') + `<pre style="margin-bottom:12px">${esc((S.prog.log || []).slice(-30).join('\n') || 'iniciando…')}</pre>`;
+  if (r.situacao === 'erro' && !rodando && r.erro) corpo += aviso('crit', 'Última tentativa falhou: ' + r.erro);
+  if (outros.length) corpo += aviso('warn', `Há SPED de outra empresa nesta revisão (${outros.map(cnpjFmt).join(', ')}). Esta revisão é de ${r.empresa}: tire o arquivo ou abra a revisão na empresa certa.`);
+  if (S.aba === 'painel' && est.painel_url) {
+    corpo += `<iframe title="Painel da revisão" src="${est.painel_url}?v=${encodeURIComponent(r.ultima_execucao || '')}"></iframe>`;
+  } else {
+    const q = (est.quadros_def || []).map((d) => { const i = (est.quadros || {})[d.id] || {}; const n = i.qtd || 0;
+      return `<div class="quadro" data-q="${d.id}"><div class="t"><span>${esc(d.nome)}</span><span class="selo ${n ? 'ok' : 'neutro'}">${n || 'vazio'}</span></div>
+        <div class="small">${n ? `${i.mb.toLocaleString('pt-BR')} MB · último ${quando(new Date(i.ultimo * 1000).toISOString())}` : esc(d.ext)}</div>
+        <div class="acoes"><button class="btn s" data-enviar ${bloq ? 'disabled' : ''}>Enviar</button>${n && d.id !== 'geral' ? `<button class="btn s g" data-limpar ${bloq ? 'disabled' : ''}>Limpar</button>` : ''}</div>
+        <input type="file" multiple hidden></div>`; }).join('');
+    corpo += `<h3 style="margin-top:0">Arquivos</h3><p class="small" style="margin:0 0 12px">Arraste ou envie em cada caixa. O motor confere o conteúdo: NF-e emitida pela própria empresa vai pra saída, de terceiro vai pra entrada; .txt que não é SPED é recusado.</p>
+      ${S.envio ? aviso('info', `Enviando ${S.envio.n} arquivo(s)… ${S.envio.pct}%`) : ''}<div class="quadros">${q}</div>
+      <div class="caixa"><b style="font-size:13px">SPED atualizado (retificado)</b><div class="small" style="margin:2px 0 8px">O arquivo novo vence o anterior do mesmo mês e empresa; o antigo fica guardado. Depois é só gerar a revisão de novo.</div>
+        <label class="btn s" style="display:inline-block">Enviar SPED atualizado<input type="file" multiple hidden accept=".txt,.zip" id="atualizado" ${bloq ? 'disabled' : ''}></label></div>
+      <h3>SPED reconhecidos</h3>
+      ${speds.length ? `<div style="border:1px solid var(--line);border-radius:8px;overflow:auto"><table><thead><tr><th>Arquivo</th><th>Tipo</th><th>Empresa</th><th class="c">Período</th><th></th></tr></thead><tbody>${speds.map((a) =>
+        `<tr><td class="nome-sped" title="${esc(a.arquivo)}">${esc(a.arquivo)}</td><td>${a.tipo === 'não reconhecido' ? '<span class="selo crit">não reconhecido</span>' : esc(a.tipo)}</td>
+         <td>${esc(a.empresa)}${a.cnpj && outros.includes(a.cnpj) ? ' <span class="selo warn">outra empresa</span>' : ''}</td><td class="c">${esc(a.periodo)}</td>
+         <td class="r">${/\(em /.test(a.arquivo) ? '' : `<button class="btn s g" data-tirar="${esc(a.rel)}" data-nome="${esc(a.arquivo)}">Tirar</button>`}</td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="small">Nenhum SPED ainda. Comece pelo SPED Fiscal e pela EFD Contribuições.</div>'}
+      <h3>Perfil da empresa</h3><p class="small" style="margin:0">O regime vem do cadastro. Atividade, CNAE e benefícios afinam quais teses e riscos o motor considera.</p>${perfilHtml(est, r)}`;
+  }
+  alvo.innerHTML = `<div class="card">
+    <div class="cab"><div class="t"><b id="titulo" title="Clique para renomear" style="cursor:text">${esc(r.titulo)}</b><div class="small">Criada por ${esc(r.criado_por || '—')} em ${quando(r.criado_em)}${r.ultima_execucao ? ' · última revisão ' + quando(r.ultima_execucao) : ''}</div></div>
+      <span class="selo ${cor}">${rot}</span>
+      <button class="btn p" id="rodar" ${rodando || !temSped || S.envio ? 'disabled' : ''} title="${temSped ? '' : 'Envie pelo menos um SPED Fiscal ou EFD Contribuições'}">${rodando ? 'Revisando…' : r.situacao === 'pronta' ? 'Gerar de novo' : 'Gerar revisão'}</button></div>
+    ${r.situacao === 'pronta' && !rodando ? `<div class="kpis">${[['Potencial em prazo', brl(res.potencial)], ['Lucro Real', brl(res.lucro_real)], ['Consolidado', brl(res.consolidado)], ['Oportunidades', res.oportunidades ?? '—'], ['Achados', res.achados ?? '—'], ['Recuperado', brl(res.recuperado)]].map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('')}</div>` : ''}
+    <div class="abas"><button class="aba${S.aba !== 'painel' ? ' on' : ''}" data-aba="arquivos">Arquivos e perfil</button><button class="aba${S.aba === 'painel' ? ' on' : ''}" data-aba="painel" ${est.painel_url ? '' : 'disabled'}>Painel da revisão</button>
+      ${S.aba === 'painel' && est.painel_url ? `<a class="btn s g" style="margin-left:auto;text-decoration:none" href="${est.painel_url}" target="_blank" rel="noreferrer">Abrir em nova aba</a>` : ''}</div>
+    <div class="corpo">${corpo}</div></div>`;
+  ligarRevisao(alvo, est, r);
+}
+
+function perfilHtml(est, r) {
+  const emps = Object.values(est.empresas || {});
+  if (!emps.length) return '<div class="small" style="margin-top:8px">O perfil aparece quando houver um SPED na revisão.</div>';
+  const P = est.perfil || {};
+  const sel = (n, v, ops) => `<select data-p="${n}">${ops.map(([k, t]) => `<option value="${k}"${String(v || '') === k ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+  return `<form id="perfil">${emps.map((e) => { const p = P[e.cnpj] || {};
+    return `<div data-cnpj="${e.cnpj}" style="border-top:1px solid var(--line);padding-top:12px;margin-top:12px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">${esc(e.nome)} <span class="small" style="font-weight:400">· ${cnpjFmt(e.cnpj)} · ${(e.periodos || []).length} período(s)</span></div>
+      <div class="campos"><label>Regime${sel('regime_tributario', p.regime_tributario || r.regime, [['', '—'], ['Lucro Real', 'Lucro Real'], ['Lucro Presumido', 'Lucro Presumido'], ['Simples Nacional', 'Simples Nacional']])}</label>
+        <label>Atividade${sel('atividade', p.atividade, [['', 'Deixar o motor inferir'], ['industria', 'Indústria'], ['comercio', 'Comércio'], ['servico', 'Serviço'], ['misto', 'Misto']])}</label>
+        <label>CNAE principal<input data-p="cnae_principal" value="${esc(p.cnae_principal || '')}" placeholder="ex.: 4744-0/01"></label>
+        <label>UF<input data-p="uf" maxlength="2" value="${esc(p.uf || e.uf || '')}"></label></div>
+      <div class="campos l"><label>Benefícios fiscais (separar por ;)<input data-p="beneficios" value="${esc((p.beneficios || []).join('; '))}"></label>
+        <label>Regimes especiais / TTD (separar por ;)<input data-p="regimes_especiais" value="${esc((p.regimes_especiais || []).join('; '))}"></label>
+        <label>O que a empresa faz<input data-p="descricao_negocio" value="${esc(p.descricao_negocio || '')}"></label>
+        <label>Observações<input data-p="observacoes" value="${esc(p.observacoes || '')}"></label></div>
+      <label class="chk"><input type="checkbox" data-p="exporta" ${p.exporta ? 'checked' : ''}> Exporta</label></div>`; }).join('')}
+    <button class="btn s" type="submit" style="margin-top:12px">Salvar perfil</button></form>`;
+}
+
+function ligarRevisao(alvo, est, r) {
+  const id = r.id;
+  $('#rodar', alvo).onclick = async () => { S.msg = null; try { const j = await post(`/api/revisoes/${id}/rodar`); if (!j.ok) { S.msg = ['warn', j.msg]; return desenharRevisao(); } S.prog = { rodando: true, log: [] }; desenharRevisao(); acompanhar(); } catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); } };
+  $('#titulo', alvo).onclick = async () => { const t = prompt('Nome da revisão', r.titulo); if (!t || t.trim() === r.titulo) return; try { await post(`/api/revisoes/${id}`, { titulo: t }, 'PATCH'); await carregarRevisoes(); } catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); } };
+  alvo.querySelectorAll('[data-aba]').forEach((b) => b.onclick = () => { S.aba = b.dataset.aba; desenharRevisao(); });
+  const enviar = async (quadro, arquivos, atualizado) => {
+    S.envio = { n: arquivos.length, pct: 0 }; S.msg = null; desenharRevisao();
+    try {
+      const j = await enviarArquivos(atualizado ? `/api/revisoes/${id}/upload-atualizado` : `/api/revisoes/${id}/upload?quadro=${quadro}`, arquivos, (pct) => { S.envio.pct = pct; const a = alvo.querySelector('.aviso.info'); if (a) a.textContent = `Enviando ${S.envio.n} arquivo(s)… ${pct}%`; });
+      if (atualizado) {
+        const ok = (j.recebidos || []).map((x) => `${x.tipo} ${x.periodo}${x.substitui ? ' (substitui o anterior)' : ' (mês novo)'}`), rec = (j.recusados || []).map((x) => `${x.arquivo}: ${x.motivo}`);
+        S.msg = [rec.length && !ok.length ? 'crit' : 'ok', [ok.length ? `Recebido: ${ok.join('; ')}.` : 'Nenhum arquivo aceito.', rec.length ? `Recusado: ${rec.join('; ')}.` : ''].filter(Boolean).join(' ')];
+      } else S.msg = [j.recebidos ? 'ok' : 'warn', j.msg];
+    } catch (e) { S.msg = ['crit', e.message]; }
+    S.envio = null; await abrirRevisao(id, true);
+  };
+  alvo.querySelectorAll('.quadro').forEach((box) => {
+    const q = box.dataset.q, inp = $('input[type=file]', box);
+    const b = $('[data-enviar]', box); if (b) b.onclick = () => inp.click();
+    inp.onchange = () => { const f = [...inp.files]; inp.value = ''; if (f.length) enviar(q, f); };
+    const l = $('[data-limpar]', box); if (l) l.onclick = async () => { if (!confirm('Apagar todos os arquivos desta caixa nesta revisão?')) return; try { await post(`/api/revisoes/${id}/limpar-quadro`, { quadro: q }); await abrirRevisao(id, true); } catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); } };
+    box.ondragover = (e) => { e.preventDefault(); box.classList.add('sobre'); };
+    box.ondragleave = () => box.classList.remove('sobre');
+    box.ondrop = (e) => { e.preventDefault(); box.classList.remove('sobre'); if (!S.envio && !(S.prog && S.prog.rodando) && e.dataTransfer.files.length) enviar(q, [...e.dataTransfer.files]); };
+  });
+  const at = $('#atualizado', alvo); if (at) at.onchange = () => { const f = [...at.files]; at.value = ''; if (f.length) enviar('atualizado', f, true); };
+  alvo.querySelectorAll('[data-tirar]').forEach((b) => b.onclick = async () => { if (!confirm(`Tirar ${b.dataset.nome} desta revisão?`)) return; try { await post(`/api/revisoes/${id}/remover`, { rel: b.dataset.tirar }); await abrirRevisao(id, true); } catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); } });
+  const fp = $('#perfil', alvo);
+  if (fp) fp.onsubmit = async (ev) => {
+    ev.preventDefault(); const out = {};
+    fp.querySelectorAll('[data-cnpj]').forEach((bl) => { const p = Object.assign({}, (est.perfil || {})[bl.dataset.cnpj] || {});
+      bl.querySelectorAll('[data-p]').forEach((c) => { const k = c.dataset.p; let v = c.type === 'checkbox' ? c.checked : c.value.trim();
+        if (k === 'beneficios' || k === 'regimes_especiais') v = v.split(';').map((x) => x.trim()).filter(Boolean);
+        if (k === 'uf') v = v.toUpperCase(); p[k] = v; });
+      out[bl.dataset.cnpj] = p; });
+    try { await post(`/api/revisoes/${id}/perfil`, out, 'PUT'); S.msg = ['ok', 'Perfil salvo. Vale na próxima vez que gerar a revisão.']; await abrirRevisao(id, true); }
+    catch (e) { S.msg = ['crit', e.message]; desenharRevisao(); }
+  };
+}
+
+lerUrl(); carregarEmpresas().then(carregarRevisoes);
+</script>
+</body></html>

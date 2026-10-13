@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Revisor Tributário · Entrar</title>
+<style>
+:root{color-scheme:light;--bg:#f4f5f8;--surface:#fff;--line:#d9dce4;--text:#141824;--muted:#6b7385;--navy:#212E50;--accent:#2a5fb0;--crit:#b3261e}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#12151d;--surface:#1a1e28;--line:#2f3546;--text:#f2f3f7;--muted:#8d93a3;--navy:#1b2440;--accent:#5486D1;--crit:#ef8b84}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:16px}
+form{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px}
+.marca{background:var(--navy);color:#fff;margin:-26px -26px 22px;padding:18px 26px;border-radius:14px 14px 0 0}
+.marca b{display:block;font-size:17px}.marca span{opacity:.75;font-size:12.5px}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+input{display:block;width:100%;margin-top:5px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text);font:inherit}
+button{width:100%;padding:11px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer;margin-top:6px}
+.erro{color:var(--crit);font-size:13px;margin:0 0 12px}
+</style></head><body>
+<form method="post" action="/login">
+  <div class="marca"><b>Revisor Tributário</b><span>Marçal Contabilidade</span></div>
+  __ERRO__
+  <label>Usuário<input name="usuario" autocomplete="username" required autofocus></label>
+  <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+  <button type="submit">Entrar</button>
+</form>
+</body></html>

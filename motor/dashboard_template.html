@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisor Tributário</title>
+<style>
+:root{color-scheme:light;--bg:#f4f5f8;--surface:#ffffff;--surface-2:#eef0f5;--line:#d9dce4;--text:#141824;--text-2:#4d5566;--muted:#7c8494;--navy:#212E50;--navy-2:#2f3f6e;--accent:#2a78d6;
+ --c-rec:#2a78d6;--c-risco:#eb6834;--c-pago:#1baf7a;--c-ncm:#4a3aa7;--c-plan:#eda100;--c-integ:#e87ba4;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--shadow:0 1px 2px rgba(20,24,36,.06),0 4px 14px rgba(20,24,36,.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12151d;--surface:#1a1e28;--surface-2:#222735;--line:#2f3546;--text:#f2f3f7;--text-2:#c3c6d1;--muted:#8d93a3;--navy:#1b2440;--navy-2:#26325a;--accent:#3987e5;
+ --c-rec:#3987e5;--c-risco:#d95926;--c-pago:#199e70;--c-ncm:#9085e9;--c-plan:#c98500;--c-integ:#d55181;--shadow:none}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#12151d;--surface:#1a1e28;--surface-2:#222735;--line:#2f3546;--text:#f2f3f7;--text-2:#c3c6d1;--muted:#8d93a3;--navy:#1b2440;--navy-2:#26325a;--accent:#3987e5;
+ --c-rec:#3987e5;--c-risco:#d95926;--c-pago:#199e70;--c-ncm:#9085e9;--c-plan:#c98500;--c-integ:#d55181;--shadow:none}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.side{background:var(--navy);color:#fff;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-weight:700;font-size:15px;letter-spacing:.2px;margin:4px 6px 18px}.brand small{display:block;font-weight:400;opacity:.7;font-size:11px;margin-top:2px}
+.nav a{display:block;color:#fff;text-decoration:none;padding:8px 10px;border-radius:8px;opacity:.82;font-size:13px}.nav a:hover,.nav a.on{background:var(--navy-2);opacity:1}
+.nav .sec{font-size:10px;text-transform:uppercase;letter-spacing:.8px;opacity:.5;margin:14px 10px 4px}
+.main{padding:22px 28px 60px;min-width:0}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 10px;padding-top:6px}h3{font-size:14px;margin:18px 0 8px;color:var(--text-2)}
+.sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow);position:sticky;top:0;z-index:5}
+.filters select,.filters input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--text);min-width:120px}
+.filters label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.filters .cnt{margin-left:auto;font-size:12px;color:var(--text-2)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);border-top:3px solid var(--k)}
+.kpi .l{font-size:12px;color:var(--text-2)}.kpi .v{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-.3px}.kpi .h{font-size:11.5px;color:var(--muted);margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th{text-align:left;font-weight:600;color:var(--text-2);font-size:11.5px;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--surface)}
+td{padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}tr.row{cursor:pointer}tr.row:hover td{background:var(--surface-2)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw{overflow-x:auto;max-height:70vh;overflow-y:auto}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--text-2);white-space:nowrap}
+.cat{display:inline-flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap}.cat i{width:9px;height:9px;border-radius:2px;background:var(--cc);display:inline-block}
+.grau-Alto{color:var(--good);font-weight:600}.grau-Médio{color:#9a6a00;font-weight:600}.grau-Baixo{color:var(--muted);font-weight:600}
+:root[data-theme="dark"] .grau-Médio{color:var(--warn)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .grau-Médio{color:var(--warn)}}
+.pri-Alta{color:var(--crit);font-weight:600}.pri-Média{color:var(--text-2)}.pri-Baixa{color:var(--muted)}
+.det{background:var(--surface-2);padding:12px 14px;border-radius:8px;font-size:12.5px;display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+.det .full{grid-column:1/-1}.det b{color:var(--text-2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}
+.det ul{margin:0;padding-left:16px}.det li{margin:2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all}
+.chart{display:grid;grid-template-columns:150px 1fr auto;gap:6px 10px;align-items:center;font-size:12.5px}
+.chart .bar{height:14px;border-radius:0 4px 4px 0;background:var(--cc);min-width:2px}.chart .lbl{color:var(--text-2);text-align:right}.chart .val{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:var(--surface-2);border:1px solid var(--line);margin:2px 3px 2px 0}
+.ok{color:var(--good)}.bad{color:var(--crit)}
+.steps li{margin:6px 0}.small{font-size:12px;color:var(--muted)}
+.kb details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--surface)}.kb summary{cursor:pointer;font-weight:600}
+.est{font-size:10.5px;color:var(--muted);border:1px dashed var(--line);border-radius:4px;padding:0 4px;margin-left:4px}
+.empty{color:var(--muted);padding:12px;text-align:center}
+@media (max-width:900px){.app{grid-template-columns:1fr}.side{position:static;height:auto}.kpis{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.det{grid-template-columns:1fr}}
+@media print{.side,.filters{display:none}.app{grid-template-columns:1fr}.tw{max-height:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+ <div class="brand">Revisor Tributário<small id="brandsub"></small></div>
+ <nav class="nav">
+  <a href="#sumario" class="on">1. Sumário executivo</a>
+  <a href="#recuperacao">Recuperação de Créditos</a>
+  <a href="#estrategia">Análise Estratégica</a>
+  <a href="#validacao">2. Validação dos arquivos</a>
+  <a href="#achados">3. Tabela de achados</a>
+  <a href="#tributos">4. Detalhamento por tributo</a>
+  <a href="#ncm">5. Revisão de NCM</a>
+  <a href="#frete">6. Frete e energia</a>
+  <a href="#plano">7. Plano de ação</a>
+  <a href="#anexos">8. Anexos</a>
+  <div class="sec">Dados</div>
+  <a href="/" id="lnk-entrada">← Entrada de dados</a>
+  <div class="sec">Referência</div>
+  <a href="#perfil">Perfil das empresas</a>
+  <a href="#conhecimento">Base de conhecimento</a>
+ </nav>
+</aside>
+<main class="main">
+ <h1 id="titulo">Revisão tributária</h1>
+ <div class="sub" id="subtitulo"></div>
+
+ <div class="filters" style="position:static">
+  <label>Empresa<select id="f-emp"><option value="">Todas</option></select></label>
+  <label>Período<select id="f-per"><option value="">Todos</option></select></label>
+  <label>Categoria<select id="f-cat"><option value="">Todas</option></select></label>
+  <label>Tributo<select id="f-trib"><option value="">Todos</option></select></label>
+  <label>Segurança<select id="f-grau"><option value="">Todos</option><option>Alto</option><option>Médio</option><option>Baixo</option></select></label>
+  <label>Prioridade<select id="f-pri"><option value="">Todas</option><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
+  <label>Busca<input id="f-q" placeholder="título, evidência, regra…"></label>
+  <span class="cnt" id="f-cnt"></span>
+ </div>
+
+ <section id="sumario">
+  <h2>1. Sumário executivo</h2>
+  <div class="kpis">
+   <div class="kpi" style="--k:var(--c-rec)"><div class="l">Recuperação + pago a maior</div><div class="v" id="k-rec"></div><div class="h">créditos não tomados e tributo pago indevidamente (5 anos)</div></div>
+   <div class="kpi" style="--k:var(--c-plan)"><div class="l">Economia futura estimada / ano</div><div class="v" id="k-fut"></div><div class="h">achados recorrentes anualizados (maior mês × 12)</div></div>
+   <div class="kpi" style="--k:var(--c-risco)"><div class="l">Riscos e passivos</div><div class="v" id="k-risco"></div><div class="h">créditos indevidos, omissões, divergências</div></div>
+   <div class="kpi" style="--k:var(--c-ncm)"><div class="l">Achados</div><div class="v" id="k-qtd"></div><div class="h" id="k-qtd-h"></div></div>
+  </div>
+  <div class="grid2">
+   <div class="card"><h3 style="margin-top:0">Valor por categoria</h3><div class="chart" id="ch-cat"></div></div>
+   <div class="card"><h3 style="margin-top:0">Valor por tributo</h3><div class="chart" id="ch-trib"></div></div>
+  </div>
+  <div class="card"><h3 style="margin-top:0">Top 5 achados por valor</h3><div class="tw"><table id="top5"><thead><tr><th>#</th><th>Categoria</th><th>Tributo</th><th>Empresa</th><th>Período</th><th>Achado</th><th class="num">Valor</th><th>Segurança</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card" id="pend-perfil" hidden><h3 style="margin-top:0">Pendências de perfil (responder antes de concluir)</h3><div id="pend-perfil-b"></div></div>
+ </section>
+
+
+ <section id="recuperacao">
+  <h2>Recuperação de Créditos Tributários</h2>
+  <div class="sub">Oportunidades por tese, empresa e período, dos últimos 5 anos. Cada uma traz o fundamento, os requisitos, as evidências, a memória de cálculo, o prazo e a atualização pela SELIC quando é indébito. <b>Comprovado</b> = o valor sai do documento; <b>Estimado</b> = depende de premissa ou análise técnica. Nada é retificado nem transmitido daqui: o status só registra o andamento, com trilha de auditoria.</div>
+  <div class="card" id="r-atualizar">
+   <h3 style="margin-top:0">Atualizar SPED Fiscal e EFD Contribuições</h3>
+   <div class="small" style="margin-bottom:8px">Envie a versão nova (retificadora ou gerada de novo) do SPED Fiscal ou da EFD Contribuições, em .txt ou .zip. O arquivo enviado aqui <b>substitui o do mesmo tipo, empresa e mês</b>; o anterior fica guardado. Depois do envio a revisão roda de novo sozinha.</div>
+   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input type="file" id="r-arq" multiple accept=".txt,.zip" style="font:inherit">
+    <button type="button" id="r-enviar" onclick="recAtualizar()" style="font:inherit;padding:7px 14px;border:0;border-radius:7px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600">Enviar e revisar de novo</button>
+    <span class="small" id="r-atu-msg"></span>
+   </div>
+   <div id="r-atu-res" class="small" style="margin-top:8px"></div>
+  </div>
+  <div class="kpis">
+   <div class="kpi" style="--k:var(--c-rec)"><div class="l">Potencial identificado</div><div class="v" id="rk-pot"></div><div class="h" id="rk-pot-h"></div></div>
+   <div class="kpi" style="--k:var(--c-pago)"><div class="l">Fundamento consolidado e comprovado</div><div class="v" id="rk-cons"></div><div class="h">tese pacificada e valor tirado do documento</div></div>
+   <div class="kpi" style="--k:var(--c-plan)"><div class="l">Pendente de validação</div><div class="v" id="rk-pend"></div><div class="h" id="rk-pend-h"></div></div>
+   <div class="kpi" style="--k:var(--c-ncm)"><div class="l">Recuperado</div><div class="v" id="rk-recup"></div><div class="h" id="rk-recup-h"></div></div>
+  </div>
+  <div class="grid2">
+   <div class="card"><h3 style="margin-top:0">Por tributo</h3><div class="chart" id="rch-trib"></div></div>
+   <div class="card"><h3 style="margin-top:0">Por ano</h3><div class="chart" id="rch-ano"></div></div>
+   <div class="card"><h3 style="margin-top:0">Por segurança jurídica</h3><div class="chart" id="rch-seg"></div></div>
+   <div class="card"><h3 style="margin-top:0">Por estabelecimento</h3><div class="chart" id="rch-emp"></div></div>
+  </div>
+  <div class="grid2">
+   <div class="card"><h3 style="margin-top:0">Prazos (prescrevem em até 6 meses)</h3><div id="r-prazos"></div></div>
+   <div class="card"><h3 style="margin-top:0">Andamento</h3><div id="r-andamento"></div></div>
+  </div>
+  <div class="filters" style="position:static;margin-top:4px">
+   <label>Regime<select id="rf-reg"><option value="lr">Lucro Real</option><option value="">Todos</option><option value="outros">Outros regimes</option></select></label>
+   <label>Empresa<select id="rf-emp"><option value="">Todas</option></select></label>
+   <label>Tese<select id="rf-tese"><option value="">Todas</option></select></label>
+   <label>Tributo<select id="rf-trib"><option value="">Todos</option></select></label>
+   <label>Ano<select id="rf-ano"><option value="">Todos</option></select></label>
+   <label>Segurança<select id="rf-seg"><option value="">Todas</option><option>Consolidada</option><option>Majoritária</option><option>Interpretativa</option></select></label>
+   <label>Comprovação<select id="rf-comp"><option value="">Todas</option><option>Comprovado</option><option>Estimado</option></select></label>
+   <label>Status<select id="rf-st"><option value="">Todos</option></select></label>
+   <label>Situação<select id="rf-sit"><option value="ativas">Em prazo</option><option value="">Todas</option><option>A quantificar</option><option>Prescrita</option><option>Fora da vigência da tese</option></select></label>
+   <span class="cnt" id="rf-cnt"></span>
+   <button type="button" onclick="recCsv()" style="font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--text);cursor:pointer">Exportar CSV</button>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="tw"><table id="rtab"><thead><tr><th>Tese</th><th>Empresa</th><th>Período</th><th>Segurança</th><th>Comprovação</th><th class="num">Original</th><th class="num">Atualizado</th><th>Prazo</th><th>Status</th></tr></thead><tbody></tbody></table></div></div>
+  <h3>Catálogo de teses <span class="small">(as marcadas "só Lucro Real" são de PIS/COFINS não cumulativo)</span></h3>
+  <div id="r-catalogo"></div>
+ </section>
+
+ <section id="estrategia">
+  <h2>Análise Estratégica Tributária</h2>
+  <div class="sub">Onde a empresa paga mais, quem gera essa carga (operações, produtos, fornecedores, estados), o que muda com a Reforma Tributária e o plano de ação. Tudo sai dos arquivos do período; o que depende de premissa (centro de distribuição, alíquotas da reforma) é calculado aqui mesmo com valores que você ajusta. É base técnica para a decisão do especialista, não recomendação automática.</div>
+  <div class="filters" style="position:static"><label>Empresa<select id="es-emp"></select></label><span class="cnt" id="es-per"></span></div>
+  <div id="es-corpo"></div>
+ </section>
+
+ <section id="validacao">
+  <h2>2. Validação dos arquivos</h2>
+  <div class="card"><div class="tw"><table id="inv"><thead><tr><th>Arquivo</th><th>Tipo</th><th>Empresa</th><th>Período</th><th class="num">Linhas</th><th class="num">9999</th><th>Codificação</th><th>Situação</th></tr></thead><tbody></tbody></table></div>
+  <div class="small" id="faltam" style="margin-top:10px"></div></div>
+ </section>
+
+ <section id="achados">
+  <h2>3. Tabela de achados</h2>
+  <div class="sub">Clique na linha para abrir evidência, memória de cálculo, fundamentação e parecer. Valores marcados <span class="est">estimativa</span> dependem das premissas descritas na memória.</div>
+  <div class="card"><div class="tw"><table id="tab"><thead><tr><th>#</th><th>Categoria</th><th>Tributo</th><th>Empresa</th><th>Período</th><th>Descrição objetiva</th><th class="num">Valor (R$)</th><th>Segurança</th><th>Prioridade</th><th>Ação</th></tr></thead><tbody></tbody></table></div></div>
+ </section>
+
+ <section id="tributos">
+  <h2>4. Detalhamento por tributo</h2>
+  <div id="trib-b"></div>
+ </section>
+
+ <section id="ncm">
+  <h2>5. Revisão de NCM</h2>
+  <div class="sub">Itens do cadastro (0200) com o regime de PIS/COFINS por NCM, o segmento de ST do Convênio 142/2018 e os achados de classificação. A sugestão de NCM alternativa exige análise técnica do produto; o revisor aponta onde a descrição e a NCM pedem essa análise.</div>
+  <div class="card"><div style="margin-bottom:8px"><input id="ncm-q" placeholder="filtrar por código, descrição, NCM ou regime…" style="font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--text);width:320px"> <span class="small" id="ncm-cnt"></span></div><div class="tw"><table id="ncm-t"><thead><tr><th>Empresa</th><th>Código</th><th>Descrição</th><th>NCM</th><th>CEST</th><th>Tipo</th><th>Regime PIS/COFINS</th><th>Setor</th><th>ST (Conv. 142)</th></tr></thead><tbody></tbody></table></div></div>
+ </section>
+
+ <section id="frete">
+  <h2>6. Frete (CT-e) e energia</h2>
+  <div class="card"><h3 style="margin-top:0">Frete tomado por período</h3><div class="tw"><table id="frete-t"><thead><tr><th>Empresa</th><th>Período</th><th class="num">CT-e</th><th class="num">Valor do frete</th><th class="num">Crédito ICMS tomado</th><th class="num">ICMS destacado sem crédito</th><th class="num">Isento/ST</th><th>Por CST/CFOP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="margin-top:0">Energia e ST</h3><div id="energia-b"></div></div>
+ </section>
+
+ <section id="plano">
+  <h2>7. Plano de ação</h2>
+  <div class="card"><ol class="steps" id="plano-b"></ol></div>
+ </section>
+
+ <section id="anexos">
+  <h2>8. Anexos</h2>
+  <div class="card"><div id="anexos-b"></div></div>
+ </section>
+
+ <section id="perfil">
+  <h2>Perfil das empresas</h2>
+  <div id="perfil-b"></div>
+ </section>
+
+ <section id="conhecimento" class="kb">
+  <h2>Base de conhecimento do revisor</h2>
+  <div class="sub">O que o motor consulta antes de apontar: regras de crédito (o que permite e o que veda), regimes por NCM, alíquotas de referência. Onde está escrito "verificar dispositivo", a regra é conhecida mas o artigo exato não foi confirmado.</div>
+  <div id="kb-b"></div>
+ </section>
+</main>
+</div>
+<script id="dados" type="application/json">__DADOS__</script>
+<script>
+const D = JSON.parse(document.getElementById('dados').textContent);
+const CORES = {'Recuperação':'var(--c-rec)','Pago a maior':'var(--c-pago)','Risco':'var(--c-risco)','NCM':'var(--c-ncm)','Planejamento':'var(--c-plan)','Integridade':'var(--c-integ)'};
+const brl = v => (v<0?'-':'') + 'R$ ' + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const emp = {}; D.resumo.empresas.forEach(e => emp[e.cnpj] = e);
+const nomeEmp = c => (emp[c]?emp[c].nome:c);
+document.getElementById('brandsub').textContent = D.gerado_em;
+document.getElementById('subtitulo').textContent = D.resumo.empresas.map(e => e.nome + ' (' + e.uf + ', ' + e.periodos.join(', ') + ')').join(' · ');
+
+// filtros
+const F = {emp:'',per:'',cat:'',trib:'',grau:'',pri:'',q:''};
+function opts(id, vals){ const s=document.getElementById(id); [...new Set(vals)].filter(Boolean).sort().forEach(v=>{const o=document.createElement('option'); o.value=v; o.textContent=id==='f-emp'?nomeEmp(v):v; s.appendChild(o);}); }
+opts('f-emp', D.achados.map(a=>a.empresa)); opts('f-per', D.achados.map(a=>a.periodo)); opts('f-cat', D.achados.map(a=>a.categoria)); opts('f-trib', D.achados.map(a=>a.tributo));
+['emp','per','cat','trib','grau','pri','q'].forEach(k => document.getElementById('f-'+k).addEventListener('input', ev => { F[k]=ev.target.value; render(); }));
+function filtrados(){ const q=F.q.toLowerCase(); return D.achados.filter(a => (!F.emp||a.empresa===F.emp)&&(!F.per||a.periodo===F.per)&&(!F.cat||a.categoria===F.cat)&&(!F.trib||a.tributo===F.trib)&&(!F.grau||a.grau===F.grau)&&(!F.pri||a.prioridade===F.pri)&&(!q||(a.titulo+' '+a.descricao+' '+a.regra+' '+(a.evidencia||[]).join(' ')).toLowerCase().includes(q))); }
+
+function catHtml(c){ return '<span class="cat" style="--cc:'+(CORES[c]||'var(--muted)')+'"><i></i>'+esc(c)+'</span>'; }
+function chart(id, mapa){ const el=document.getElementById(id); const ents=Object.entries(mapa).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]); const max=Math.max(...ents.map(x=>x[1]),1); el.innerHTML = ents.length? ents.map(([k,v])=>'<div class="lbl" title="'+esc(k)+'">'+esc(k)+'</div><div><div class="bar" style="--cc:'+(CORES[k]||'var(--accent)')+';width:'+(v/max*100).toFixed(1)+'%" title="'+esc(k)+': '+brl(v)+'"></div></div><div class="val">'+brl(v)+'</div>').join('') : '<div class="empty">sem valores</div>'; }
+
+function render(){
+  const L = filtrados();
+  document.getElementById('f-cnt').textContent = L.length + ' de ' + D.achados.length + ' achados';
+  const sum = (cat) => L.filter(a=>cat.includes(a.categoria)).reduce((s,a)=>s+a.valor,0);
+  document.getElementById('k-rec').textContent = brl(sum(['Recuperação','Pago a maior']));
+  document.getElementById('k-risco').textContent = brl(sum(['Risco']));
+  document.getElementById('k-fut').textContent = brl(D.resumo.economia_futura_ano);
+  document.getElementById('k-qtd').textContent = L.length;
+  const qc = {}; L.forEach(a=>qc[a.categoria]=(qc[a.categoria]||0)+1); document.getElementById('k-qtd-h').textContent = Object.entries(qc).map(x=>x[1]+' '+x[0].toLowerCase()).join(' · ');
+  const pc={}, pt={}; L.forEach(a=>{pc[a.categoria]=(pc[a.categoria]||0)+a.valor; pt[a.tributo]=(pt[a.tributo]||0)+a.valor;}); chart('ch-cat',pc); chart('ch-trib',pt);
+  const top = L.filter(a=>a.valor>0).sort((a,b)=>b.valor-a.valor).slice(0,5);
+  document.querySelector('#top5 tbody').innerHTML = top.map(a=>'<tr class="row" onclick="ir(\''+a.id+'\')"><td>'+a.n+'</td><td>'+catHtml(a.categoria)+'</td><td>'+esc(a.tributo)+'</td><td>'+esc(nomeEmp(a.empresa))+'</td><td>'+a.periodo+'</td><td>'+esc(a.titulo)+'</td><td class="num">'+brl(a.valor)+(a.estimativa?'<span class="est">est.</span>':'')+'</td><td class="grau-'+a.grau+'">'+a.grau+'</td></tr>').join('') || '<tr><td colspan="8" class="empty">nada com valor no filtro</td></tr>';
+  document.querySelector('#tab tbody').innerHTML = L.map(a => '<tr class="row" id="r-'+a.id+'" onclick="tog(\''+a.id+'\')"><td>'+a.n+'</td><td>'+catHtml(a.categoria)+'</td><td>'+esc(a.tributo)+'</td><td>'+esc(nomeEmp(a.empresa))+'</td><td>'+a.periodo+'</td><td><b>'+esc(a.titulo)+'</b><div class="small">'+esc(a.regra)+' · '+esc(a.tese)+'</div></td><td class="num">'+(a.valor?brl(a.valor):'<span class="small">sem valor</span>')+(a.estimativa?'<span class="est">est.</span>':'')+'</td><td class="grau-'+a.grau+'">'+a.grau+'</td><td class="pri-'+a.prioridade+'">'+a.prioridade+'</td><td class="small">'+esc(a.acao)+'</td></tr>'
+   + '<tr id="d-'+a.id+'" hidden><td colspan="10"><div class="det">'
+   + '<div class="full"><b>Descrição</b>'+esc(a.descricao)+'</div>'
+   + (a.memoria?'<div><b>Memória de cálculo</b>'+esc(a.memoria)+'</div>':'')
+   + '<div><b>Fundamentação legal</b>'+esc(a.fundamentacao)+'</div>'
+   + ((a.evidencia||[]).length?'<div class="full"><b>Evidência ('+a.evidencia.length+')</b><ul>'+a.evidencia.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>':'')
+   + (a.parecer_claude?'<div class="full"><b>Parecer aprofundado (Claude)</b>'+esc(a.parecer_claude.parecer||'')+(a.parecer_claude.fundamentacao_complementar&&a.parecer_claude.fundamentacao_complementar!=='nenhuma'?'<div style="margin-top:6px"><i>Fundamentação complementar:</i> '+esc(a.parecer_claude.fundamentacao_complementar)+'</div>':'')+(a.parecer_claude.grau_seguranca?'<div style="margin-top:6px"><i>Grau:</i> '+esc(a.parecer_claude.grau_seguranca)+' ('+esc(a.parecer_claude.motivo_grau||'')+')</div>':'')+((a.parecer_claude.premissas_a_confirmar||[]).length?'<div style="margin-top:6px"><i>Premissas a confirmar:</i> '+a.parecer_claude.premissas_a_confirmar.map(esc).join('; ')+'</div>':'')+((a.parecer_claude.passos||[]).length?'<div style="margin-top:6px"><i>Passos:</i> '+a.parecer_claude.passos.map(esc).join(' → ')+'</div>':'')+(a.parecer_claude.prazo_decadencial?'<div style="margin-top:6px"><i>Prazo:</i> '+esc(a.parecer_claude.prazo_decadencial)+'</div>':'')+'</div>':'')
+   + '</div></td></tr>').join('') || '<tr><td colspan="10" class="empty">nenhum achado no filtro</td></tr>';
+  renderTributos(L); renderPlano(L);
+}
+function tog(id){ const d=document.getElementById('d-'+id); d.hidden=!d.hidden; }
+function ir(id){ location.hash='#achados'; const d=document.getElementById('d-'+id); if(d){d.hidden=false; document.getElementById('r-'+id).scrollIntoView({block:'center'});} }
+
+function renderTributos(L){
+  const por={}; L.forEach(a=>{(por[a.tributo]=por[a.tributo]||[]).push(a);});
+  const ordem=['ICMS','ICMS-ST','DIFAL','IPI','PIS/COFINS','PIS','COFINS','ICMS/IPI','IBS/CBS','Cadastro','SPED'];
+  document.getElementById('trib-b').innerHTML = Object.keys(por).sort((a,b)=>(ordem.indexOf(a)+1||99)-(ordem.indexOf(b)+1||99)).map(t=>{
+    const l=por[t]; const v=c=>l.filter(a=>a.categoria===c).reduce((s,a)=>s+a.valor,0);
+    return '<div class="card"><h3 style="margin-top:0">'+esc(t)+' <span class="small">('+l.length+' achados)</span></h3>'
+     +'<div>'+['Recuperação','Pago a maior','Risco','NCM','Planejamento','Integridade'].filter(c=>l.some(a=>a.categoria===c)).map(c=>'<span class="pill">'+catHtml(c)+' '+brl(v(c))+'</span>').join('')+'</div>'
+     +'<ul style="margin:8px 0 0;padding-left:18px">'+l.map(a=>'<li><a href="#" onclick="ir(\''+a.id+'\');return false">'+esc(a.titulo)+'</a> <span class="small">'+esc(nomeEmp(a.empresa))+' · '+a.periodo+(a.valor?' · '+brl(a.valor):'')+'</span>'+(a.memoria?'<div class="small">'+esc(a.memoria)+'</div>':'')+'</li>').join('')+'</ul></div>';
+  }).join('') || '<div class="empty">sem achados no filtro</div>';
+}
+function renderPlano(L){
+  const grupos=[['Retificações de SPED (EFD ICMS/IPI e EFD Contribuições)', a=>/retificar|escriturar|estornar/i.test(a.acao)],['Pedidos de restituição, ressarcimento e compensação (PER/DCOMP, e-CredAc, SISCRED)', a=>/per\/dcomp|ressarc|restitui|transfer|acumulado|compensa/i.test(a.acao)],['Correção de cadastro e de emissão (0200, NCM/CEST, ERP)', a=>/cadastro|cest|ncm|erp|emiss/i.test(a.acao)],['Documentação de suporte a produzir (laudos, pareceres, contratos)', a=>/laudo|documentar|classificar|equipara|parecer/i.test(a.acao)],['Confirmações e decisões do contribuinte', a=>/confirmar|conferir|verificar|fornecer/i.test(a.acao)]];
+  const usados=new Set(); const html=[];
+  grupos.forEach(([t,f])=>{ const l=L.filter(a=>!usados.has(a.id)&&f(a)); l.forEach(a=>usados.add(a.id)); if(l.length) html.push('<li><b>'+t+'</b><ul>'+l.map(a=>'<li><a href="#" onclick="ir(\''+a.id+'\');return false">'+esc(a.acao)+'</a> <span class="small">('+esc(a.titulo)+', '+esc(nomeEmp(a.empresa))+' '+a.periodo+(a.valor?', '+brl(a.valor):'')+')</span></li>').join('')+'</ul></li>'); });
+  const resto=L.filter(a=>!usados.has(a.id)); if(resto.length) html.push('<li><b>Outros</b><ul>'+resto.map(a=>'<li>'+esc(a.acao)+' <span class="small">('+esc(a.titulo)+')</span></li>').join('')+'</ul></li>');
+  document.getElementById('plano-b').innerHTML = html.join('') || '<li class="empty">nada no filtro</li>';
+}
+
+// inventário
+document.querySelector('#inv tbody').innerHTML = D.inventario.map(i=>'<tr><td>'+esc(i.arquivo)+'</td><td>'+esc(i.tipo)+'</td><td>'+esc(i.empresa||'')+'</td><td>'+esc(i.periodo||'')+'</td><td class="num">'+(i.linhas||'')+'</td><td class="num">'+(i.qtd_9999||'')+'</td><td>'+esc(i.encoding||'')+'</td><td>'+(i.ok?'<span class="ok">✓ íntegro</span>':'<span class="bad">✗ '+esc((i.problemas||[]).slice(0,2).join('; ')||'ver achados')+'</span>')+'</td></tr>').join('');
+document.getElementById('faltam').innerHTML = D.faltam.length ? '<b>Análises prejudicadas por falta de arquivo:</b><ul>'+D.faltam.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>' : '';
+if (D.pendencias_perfil.length){ document.getElementById('pend-perfil').hidden=false; document.getElementById('pend-perfil-b').innerHTML = '<div class="small">Preencha <code>'+esc(D.perfil_arquivo)+'</code> e rode de novo. Enquanto isso o revisor usa o que inferiu dos próprios arquivos.</div><ul>'+D.pendencias_perfil.map(p=>'<li><b>'+esc(p.empresa)+'</b>: faltam '+p.faltando.map(esc).join(', ')+'</li>').join('')+'</ul>'; }
+
+// NCM
+document.querySelector('#ncm-t tbody').innerHTML = D.resumo.empresas.flatMap(e=>e.tabela_ncm.map(n=>'<tr><td>'+esc(e.nome)+'</td><td>'+esc(n.cod)+'</td><td>'+esc(n.descricao)+'</td><td>'+esc(n.ncm)+'</td><td>'+(n.cest?esc(n.cest):'<span class="bad">sem CEST</span>')+'</td><td>'+esc(n.tipo)+'</td><td>'+(n.regime_pis_cofins?'<span class="tag">'+esc(n.regime_pis_cofins)+'</span>':'')+'</td><td class="small">'+esc(n.setor)+'</td><td class="small">'+esc(n.segmento_st_conv142)+'</td></tr>')).join('') || '<tr><td colspan="9" class="empty">sem cadastro 0200</td></tr>';
+document.getElementById('ncm-q').addEventListener('input', ev => { const q=ev.target.value.toLowerCase(); let n=0; document.querySelectorAll('#ncm-t tbody tr').forEach(tr => { const on=!q||tr.textContent.toLowerCase().includes(q); tr.hidden=!on; if(on)n++; }); document.getElementById('ncm-cnt').textContent = n+' itens'; });
+document.getElementById('ncm-cnt').textContent = document.querySelectorAll('#ncm-t tbody tr').length+' itens';
+// frete
+document.querySelector('#frete-t tbody').innerHTML = D.resumo.empresas.flatMap(e=>e.tabela_frete.map(f=>'<tr><td>'+esc(e.nome)+'</td><td>'+f.periodo+'</td><td class="num">'+f.ctes+'</td><td class="num">'+brl(f.valor_frete)+'</td><td class="num">'+brl(f.credito_tomado)+'</td><td class="num '+(f.icms_destacado_sem_credito>0?'bad':'')+'">'+brl(f.icms_destacado_sem_credito)+'</td><td class="num">'+brl(f.isento_ou_st)+'</td><td class="small">'+f.por_cst.map(x=>x.cst+'/'+x.cfop+'/'+x.aliq+'%: '+brl(x.valor)).join('<br>')+'</td></tr>')).join('') || '<tr><td colspan="8" class="empty">sem CT-e tomado</td></tr>';
+// energia e ST
+const en = D.achados.filter(a=>['F09','F09b','F09c','P07'].includes(a.regra));
+const stl = D.resumo.empresas.flatMap(e=>e.tabela_st.map(t=>({e:e.nome,...t})));
+document.getElementById('energia-b').innerHTML = (en.length?'<h3 style="margin-top:0">Energia elétrica</h3><ul>'+en.map(a=>'<li><a href="#" onclick="ir(\''+a.id+'\');return false">'+esc(a.titulo)+'</a> <span class="small">'+esc(nomeEmp(a.empresa))+' '+a.periodo+(a.valor?' · '+brl(a.valor):'')+'</span></li>').join('')+'</ul>':'<div class="small">Nenhum achado de energia.</div>')
+ + (stl.length?'<h3>ICMS-ST por UF (E210)</h3><div class="tw" style="max-height:40vh"><table><thead><tr><th>Empresa</th><th>Período</th><th>UF</th><th class="num">Retenção</th><th class="num">Ressarcimento</th><th class="num">A recolher</th><th class="num">Saldo credor</th></tr></thead><tbody>'+stl.flatMap(t=>t.ufs.filter(u=>u.retencao||u.recolher||u.ressarcimento||u.saldo_credor).map(u=>'<tr><td>'+esc(t.e)+'</td><td>'+t.periodo+'</td><td>'+u.uf+'</td><td class="num">'+brl(u.retencao)+'</td><td class="num">'+brl(u.ressarcimento)+'</td><td class="num">'+brl(u.recolher)+'</td><td class="num">'+brl(u.saldo_credor)+'</td></tr>')).join('')+'</tbody></table></div>':'');
+// anexos
+document.getElementById('anexos-b').innerHTML = '<p>Arquivos gerados na pasta <code>'+esc(D.pasta_saida)+'</code>:</p><ul>'+D.anexos.map(a=>'<li><code>'+esc(a.arquivo)+'</code> <span class="small">'+esc(a.descricao)+'</span></li>').join('')+'</ul>';
+// perfil
+document.getElementById('perfil-b').innerHTML = D.resumo.empresas.map(e=>{const p=e.perfil, i=e.perfil_inferido; return '<div class="card"><h3 style="margin-top:0">'+esc(e.nome)+' <span class="small">'+esc(e.cnpj)+' · '+e.uf+'</span></h3><div class="det"><div><b>Informado (perfil.json)</b>regime: '+esc(p.regime_tributario||'não informado')+'<br>atividade: '+esc(p.atividade)+(p.atividade_inferida?' <span class="est">inferida</span>':'')+'<br>CNAE: '+esc(p.cnae_principal||'não informado')+'<br>PIS/COFINS: '+esc(p.regime_pis_cofins||'sem EFD Contribuições')+'<br>equiparado a industrial (IPI): '+esc(p.equiparado_industrial_ipi==null?'não informado':p.equiparado_industrial_ipi)+'<br>benefícios: '+esc((p.beneficios||[]).join(', ')||'nenhum informado')+'</div><div><b>Lido dos arquivos</b>IND_ATIV no SPED: '+esc(e.info.ind_ativ)+' ('+(e.info.ind_ativ==='0'?'industrial ou equiparado':'outros')+')<br>perfil: '+esc(e.info.perfil)+'<br>endereço: '+esc(e.info.endereco||'')+'<br>vende produção: '+brl(i.vende_producao)+' · revenda: '+brl(i.vende_revenda)+'<br>exporta: '+(i.exporta?'sim ('+brl(i.valor_exportacao)+')':'não')+' · substituto: '+(i.substituto_tributario?'sim':'não')+' · compra com ST: '+(i.compra_com_st?'sim':'não')+'<br>energia: '+(i.tem_energia?'sim':'não')+' · frete: '+(i.tem_frete?'sim':'não')+' · ativo: '+(i.tem_ativo?'sim':'não')+'<br>UFs com ST: '+esc((i.ufs_com_st||[]).join(' ')||'nenhuma')+'</div><div class="full"><b>Operações por grupo (CFOP)</b>'+Object.entries(i.grupos||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<span class="pill">'+esc(k)+' '+brl(v)+'</span>').join('')+'</div></div></div>';}).join('');
+// base de conhecimento
+const K=D.conhecimento; let kb='';
+Object.entries(K.regras_credito).forEach(([trib,r])=>{ kb+='<details><summary>'+esc(trib.replace('_','/'))+' <span class="small">'+esc(r.base||'')+'</span></summary>';
+  ['permite','veda','ressarcimento','regras','exclusoes_base_saida'].forEach(k=>{ if(r[k]&&r[k].length){ kb+='<h3>'+({permite:'Permite crédito',veda:'Veda crédito',ressarcimento:'Ressarcimento',regras:'Regras',exclusoes_base_saida:'Exclusões da base'}[k])+'</h3><div class="tw"><table><thead><tr><th>Item</th><th>Quem</th><th>Base legal</th><th>Observação</th></tr></thead><tbody>'+r[k].map(x=>'<tr><td>'+esc(x.item)+'</td><td>'+esc(x.quem||'')+'</td><td class="small">'+esc(x.base)+'</td><td class="small">'+esc(x.obs||'')+'</td></tr>').join('')+'</tbody></table></div>'; } });
+  if(r.equiparacao) kb+='<p class="small">'+esc(r.equiparacao)+'</p>'; kb+='</details>'; });
+kb+='<details><summary>Regimes de PIS/COFINS por NCM (monofásico e alíquota zero)</summary><div class="tw"><table><thead><tr><th>NCM (prefixos)</th><th>Setor</th><th>Base legal</th><th>Alíquotas do fabricante</th></tr></thead><tbody>'+K.monofasico.map(m=>'<tr><td class="small">'+esc(m.ncm.join(', '))+'</td><td>'+esc(m.setor)+'</td><td class="small">'+esc(m.base)+'</td><td>'+(m.aliq&&m.aliq[0]!=null?m.aliq[0]+'% / '+m.aliq[1]+'%':'específicas')+'</td></tr>').join('')+K.aliq_zero.map(m=>'<tr><td class="small">'+esc(m.ncm.join(', '))+'</td><td>'+esc(m.setor)+'</td><td class="small">'+esc(m.base)+'</td><td>alíquota zero</td></tr>').join('')+'</tbody></table></div></details>';
+kb+='<details><summary>Alíquotas internas de ICMS por UF (referência 2025, conferir na lei estadual)</summary><div>'+Object.entries(K.aliq_interna).map(([u,v])=>'<span class="pill">'+u+' '+v+'%</span>').join('')+'</div><p class="small">Interestadual: 7% de S/SE (exceto ES) para N/NE/CO/ES; 12% nos demais casos; 4% para importados (Res. SF 13/2012).</p></details>';
+kb+='<details><summary>Fundamentação por regra do motor</summary><div class="tw"><table><thead><tr><th>Regra</th><th>Fundamentação</th><th>Tese</th></tr></thead><tbody>'+Object.entries(K.fundamentacao).map(([k,v])=>'<tr><td>'+k+'</td><td class="small">'+esc(v[0])+'</td><td class="small">'+esc(v[1])+'</td></tr>').join('')+'</tbody></table></div></details>';
+document.getElementById('kb-b').innerHTML = kb;
+// nav highlight
+const links=[...document.querySelectorAll('.nav a')].filter(l=>(l.getAttribute('href')||'').startsWith('#')); const secs=links.map(l=>document.querySelector(l.getAttribute('href')));
+window.addEventListener('scroll',()=>{ let i=secs.findIndex(s=>s&&s.getBoundingClientRect().top>80); if(i<0)i=secs.length; const on=Math.max(i-1,0); links.forEach((l,j)=>l.classList.toggle('on',j===on)); });
+if(location.protocol==='file:'||window.REVISOR_COCKPIT) document.getElementById('lnk-entrada').hidden=true;
+render();
+// ------------------------------------------------------------------ Recuperação de Créditos
+const R = D.recuperacao || {oportunidades: [], painel: {}, catalogo: []};
+const RF = {reg:(D.recuperacao&&D.recuperacao.tem_lucro_real)?'lr':'', emp:'', tese:'', trib:'', ano:'', seg:'', comp:'', st:'', sit:'ativas'};
+const SERVIDO = location.protocol !== 'file:';
+const STATUS_R = ['Identificada','Em validação','Validada','Em processamento','Recuperada','Descartada'];
+function rOpts(id, vals, rot){ const s=document.getElementById(id); [...new Set(vals)].filter(Boolean).sort().forEach(v=>{const o=document.createElement('option'); o.value=v; o.textContent=rot?rot(v):v; s.appendChild(o);}); }
+function recFiltradas(){ return R.oportunidades.filter(o => (!RF.reg||(RF.reg==='lr'?o.lucro_real:!o.lucro_real))&&(!RF.emp||o.empresa===RF.emp)&&(!RF.tese||o.tese_id===RF.tese)&&(!RF.trib||o.tributo===RF.trib)&&(!RF.ano||o.ano===RF.ano)&&(!RF.seg||o.seguranca===RF.seg)&&(!RF.comp||o.comprovacao===RF.comp)&&(!RF.st||o.status===RF.st)&&(RF.sit===''||(RF.sit==='ativas'?(o.situacao==='Em prazo'&&o.status!=='Descartada'):o.situacao===RF.sit))); }
+function segTag(s){ const c={'Consolidada':'var(--good)','Majoritária':'#9a6a00','Interpretativa':'var(--crit)'}[s]||'var(--muted)'; return '<span class="tag" style="color:'+c+';border-color:'+c+'">'+esc(s)+'</span>'; }
+function prazoTxt(o){ if(o.situacao==='Prescrita') return '<span class="bad">prescrita em '+esc(o.limite)+'</span>'; const m=o.meses_para_prescrever; return (m<=6?'<span class="bad">':'<span>')+'até '+esc(o.limite)+' ('+m+' meses)</span>'; }
+function renderRec(){
+  const P = R.painel || {};
+  document.getElementById('rk-pot').textContent = brl(P.potencial||0);
+  document.getElementById('rk-pot-h').textContent = (P.qtd||0)+' oportunidade(s) em prazo · Lucro Real '+brl(P.lucro_real||0)+' · original '+brl(P.potencial_original||0)+(P.a_quantificar?' · '+P.a_quantificar+' a quantificar':'');
+  document.getElementById('rk-cons').textContent = brl(P.consolidado||0);
+  document.getElementById('rk-pend').textContent = brl(P.pendente_validacao||0);
+  document.getElementById('rk-pend-h').textContent = 'validado '+brl(P.validado||0)+' · em processamento '+brl(P.em_processamento||0);
+  document.getElementById('rk-recup').textContent = brl(P.recuperado||0);
+  document.getElementById('rk-recup-h').textContent = 'descartado '+brl(P.descartado||0)+' · prescrito '+brl(P.prescritas||0);
+  const m = l => Object.fromEntries((l||[]).map(x=>[x.chave,x.valor]));
+  chart('rch-trib', m(P.por_tributo)); chart('rch-ano', m(P.por_ano)); chart('rch-seg', m(P.por_seguranca)); chart('rch-emp', m(P.por_empresa));
+  document.getElementById('r-prazos').innerHTML = (P.prazos||[]).length ? '<table><tbody>'+P.prazos.map(x=>'<tr class="row" onclick="recIr(\''+x.id+'\')"><td>'+esc(x.tese)+'</td><td>'+esc(x.periodo)+'</td><td class="bad">'+(x.meses<=0?'último mês':x.meses+' meses')+'</td><td class="num">'+brl(x.valor)+'</td></tr>').join('')+'</tbody></table>' : '<div class="empty">nenhuma oportunidade prescreve nos próximos 6 meses</div>';
+  const and = {}; R.oportunidades.forEach(o=>{ if(o.situacao!=='Em prazo') return; and[o.status]=(and[o.status]||0)+(o.status==='Recuperada'?(o.valor_recuperado||0):o.valor_atualizado); });
+  document.getElementById('r-andamento').innerHTML = STATUS_R.map(s=>'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span>'+s+'</span><b>'+brl(and[s]||0)+'</b></div>').join('') + '<div class="small" style="margin-top:8px">Divergências entre obrigações acessórias: '+(P.divergencias||0)+' achado(s) de cruzamento (ver Tabela de achados, regras X).</div>';
+  const L = recFiltradas();
+  document.getElementById('rf-cnt').textContent = L.length+' oportunidade(s) · '+brl(L.reduce((t,o)=>t+o.valor_atualizado,0));
+  const tb = document.querySelector('#rtab tbody');
+  tb.innerHTML = L.length ? L.map(o=>'<tr class="row" id="rr-'+o.id+'" onclick="recTog(\''+o.id+'\')"><td><b>'+esc(o.tese_id)+'</b> '+esc(o.tese)+'</td><td>'+esc(o.nome)+'</td><td>'+esc(o.periodo)+'</td><td>'+segTag(o.seguranca)+'</td><td>'+esc(o.comprovacao)+(o.comprovacao==='Estimado'?'<span class="est">est.</span>':'')+'</td><td class="num">'+brl(o.valor_original)+'</td><td class="num"><b>'+brl(o.valor_atualizado)+'</b>'+(o.selic_pct!=null?'<div class="small">SELIC '+String(o.selic_pct).replace('.',',')+'%</div>':'')+'</td><td>'+prazoTxt(o)+'</td><td><span class="tag">'+esc(o.status)+'</span></td></tr><tr id="rd-'+o.id+'" hidden><td colspan="9">'+recDet(o)+'</td></tr>').join('') : '<tr><td colspan="9" class="empty">Nenhuma oportunidade com esses filtros.</td></tr>';
+  document.getElementById('r-catalogo').innerHTML = (R.catalogo||[]).map(t=>'<details class="card" style="padding:10px 14px"><summary style="cursor:pointer"><b>'+esc(t.id)+'</b> '+esc(t.nome)+' · '+segTag(t.seguranca)+(t.so_lucro_real?' <span class="tag">só Lucro Real</span>':'')+' <span class="small">'+(t.avaliada?(t.qtd?t.qtd+' oportunidade(s) · '+brl(t.valor):'sem ocorrência nos arquivos'):'não avaliada: depende de '+esc(t.depende))+'</span></summary><div class="det" style="margin-top:8px"><div class="full"><b>Fundamento</b>'+esc(t.fundamento)+'</div><div><b>Via</b>'+esc(t.via)+'</div><div><b>Habilitação</b>'+esc(t.habilitacao)+'</div><div><b>Atualização</b>'+esc(t.atualizacao)+'</div><div><b>Vigência</b>'+esc((t.vigencia[0]||'sem início')+' a '+(t.vigencia[1]||'atual'))+' · regras '+esc((t.regras||[]).join(', ')||'-')+'</div><div><b>Requisitos</b><ul>'+t.requisitos.map(x=>'<li style="font-family:inherit">'+esc(x)+'</li>').join('')+'</ul></div><div><b>Documentos de prova</b><ul>'+t.documentos.map(x=>'<li style="font-family:inherit">'+esc(x)+'</li>').join('')+'</ul></div></div></details>').join('');
+}
+function recDet(o){
+  const hist = (o.historico||[]).map(h=>'<li style="font-family:inherit">'+esc(h.em)+': '+esc(h.de||'')+' → <b>'+esc(h.para)+'</b>'+(h.obs?' · '+esc(h.obs):'')+(h.valor_recuperado!=null?' · '+brl(h.valor_recuperado):'')+'</li>').join('') || '<li style="font-family:inherit">sem movimentação</li>';
+  const acoes = SERVIDO ? '<div class="full" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b style="margin:0 6px 0 0">Mudar status</b>'+STATUS_R.filter(s=>s!==o.status).map(s=>'<button type="button" onclick="event.stopPropagation();recStatus(\''+o.id+'\',\''+s+'\')" style="font:inherit;font-size:12px;padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer">'+s+'</button>').join('')+'<button type="button" onclick="event.stopPropagation();recDossie(\''+o.id+'\')" style="font:inherit;font-size:12px;padding:4px 9px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;margin-left:auto">Dossiê (imprimir/PDF)</button></div>' : '<div class="full small">Abra pelo Revisor (localhost) para registrar o andamento.</div>';
+  return '<div class="det"><div class="full"><b>Achado</b>'+esc(o.titulo)+' — '+esc(o.descricao)+'</div>'
+    +'<div><b>Fundamento legal</b>'+esc(o.fundamento)+'</div><div><b>Via de recuperação</b>'+esc(o.via)+'<br><span class="small">'+esc(o.habilitacao)+'</span></div>'
+    +'<div><b>Memória de cálculo</b>'+esc(o.memoria||'-')+(o.selic_detalhe?'<br><span class="small">Atualização: '+esc(o.selic_detalhe)+' = '+String(o.selic_pct).replace('.',',')+'%</span>':'<br><span class="small">'+esc(o.atualizacao)+'</span>')+'</div>'
+    +'<div><b>Requisitos (confirmar)</b><ul>'+o.requisitos.map(r=>'<li style="font-family:inherit">'+esc(r.texto)+' <span class="small">('+esc(r.situacao)+')</span></li>').join('')+'</ul></div>'
+    +'<div><b>Documentos de prova</b><ul>'+o.documentos.map(x=>'<li style="font-family:inherit">'+esc(x)+'</li>').join('')+'</ul></div>'
+    +'<div><b>Origem</b>regras '+esc(o.regras.join(', '))+(o.tambem.length?'<br><span class="small">também apontado por '+o.tambem.map(t=>esc(t.regra)+' ('+brl(t.valor)+')').join(', ')+': não somado, para não contar o mesmo crédito duas vezes</span>':'')+'</div>'
+    +'<div class="full"><b>Evidências ('+o.evidencia.length+')</b><ul>'+(o.evidencia.slice(0,30).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>-</li>')+(o.evidencia.length>30?'<li>… mais '+(o.evidencia.length-30)+' no CSV de evidências</li>':'')+'</ul></div>'
+    +'<div class="full"><b>Trilha de auditoria</b><ul>'+hist+'</ul></div>'+acoes+'</div>';
+}
+function recTog(id){ const d=document.getElementById('rd-'+id); d.hidden=!d.hidden; }
+function recIr(id){ RF.sit=''; document.getElementById('rf-sit').value=''; renderRec(); const d=document.getElementById('rd-'+id); if(d){ d.hidden=false; document.getElementById('rr-'+id).scrollIntoView({block:'center'}); } }
+async function recStatus(id, status){
+  let obs = '', valor = null;
+  if (status === 'Descartada') { obs = prompt('Motivo do descarte (obrigatório):') || ''; if (!obs.trim()) return; }
+  else if (status === 'Recuperada') { const v = prompt('Valor efetivamente recuperado (R$):'); if (v === null) return; valor = parseFloat(v.replace(/\./g,'').replace(',','.')) || 0; obs = prompt('Observação (nº do PER/DCOMP, processo, data):') || ''; }
+  else { obs = prompt('Observação (opcional):') || ''; }
+  try {
+    const r = await fetch('api/recuperacao/status', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, status, obs, valor_recuperado: valor})});
+    const j = await r.json(); if (!r.ok) throw new Error(j.erro || r.statusText);
+    const o = R.oportunidades.find(x=>x.id===id); Object.assign(o, {status: j.status, historico: j.historico, valor_recuperado: j.valor_recuperado||0});
+    R.painel = j.painel || R.painel; renderRec(); const d=document.getElementById('rd-'+id); if(d) d.hidden=false;
+  } catch (e) { alert('Não gravou: ' + e.message); }
+}
+function recDossie(id){
+  const o = R.oportunidades.find(x=>x.id===id); const w = window.open('', '_blank');
+  const li = a => a.map(x=>'<li>'+esc(x)+'</li>').join('');
+  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Dossiê '+esc(o.tese_id)+' '+esc(o.periodo)+'</title><style>body{font:12.5px/1.5 -apple-system,Segoe UI,Arial,sans-serif;margin:28px;color:#141824}h1{font-size:18px;margin:0}h2{font-size:13px;margin:18px 0 6px;color:#212E50;text-transform:uppercase;letter-spacing:.5px}table{border-collapse:collapse;width:100%}td{border:1px solid #d9dce4;padding:6px 8px;vertical-align:top}td:first-child{width:200px;color:#4d5566}ul{margin:0;padding-left:18px}.mono li{font-family:Menlo,monospace;font-size:11px;word-break:break-all}.aviso{margin-top:16px;padding:10px;border:1px solid #d9dce4;background:#f4f5f8;font-size:11.5px}</style></head><body>'
+   +'<h1>Dossiê de recuperação: '+esc(o.tese)+'</h1><div>'+esc(o.nome)+' · CNPJ '+esc(o.empresa)+' · período '+esc(o.periodo)+' · gerado em '+esc(D.gerado_em)+'</div>'
+   +'<h2>Resumo</h2><table><tr><td>Tese</td><td>'+esc(o.tese_id+' '+o.tese)+'</td></tr><tr><td>Tributo</td><td>'+esc(o.tributo)+'</td></tr><tr><td>Valor original</td><td>'+brl(o.valor_original)+'</td></tr><tr><td>Valor atualizado</td><td>'+brl(o.valor_atualizado)+(o.selic_detalhe?' ('+esc(o.selic_detalhe)+' = '+String(o.selic_pct).replace('.',',')+'%)':' ('+esc(o.atualizacao)+')')+'</td></tr><tr><td>Segurança jurídica</td><td>'+esc(o.seguranca)+'</td></tr><tr><td>Comprovação</td><td>'+esc(o.comprovacao)+'</td></tr><tr><td>Prazo</td><td>até '+esc(o.limite)+' ('+esc(o.situacao)+')</td></tr><tr><td>Status</td><td>'+esc(o.status)+'</td></tr></table>'
+   +'<h2>Achado</h2><p>'+esc(o.titulo)+'. '+esc(o.descricao)+'</p><h2>Fundamento legal</h2><p>'+esc(o.fundamento)+'</p>'
+   +'<h2>Via de recuperação</h2><p>'+esc(o.via)+'<br>'+esc(o.habilitacao)+'</p><h2>Requisitos a confirmar</h2><ul>'+li(o.requisitos.map(r=>r.texto))+'</ul>'
+   +'<h2>Documentos de prova</h2><ul>'+li(o.documentos)+'</ul><h2>Memória de cálculo</h2><p>'+esc(o.memoria||'-')+'</p>'
+   +'<h2>Evidências</h2><ul class="mono">'+li(o.evidencia)+'</ul><h2>Trilha de auditoria</h2><ul>'+li((o.historico||[]).map(h=>h.em+': '+(h.de||'')+' → '+h.para+(h.obs?' · '+h.obs:'')))+'</ul>'
+   +'<div class="aviso">Estimativa técnica gerada pelo Revisor Tributário a partir dos arquivos fiscais. Antes de retificar ou transmitir PER/DCOMP, validar os requisitos, conferir os documentos e obter a aprovação do responsável técnico.</div></body></html>');
+  w.document.close(); setTimeout(()=>w.print(), 300);
+}
+async function recAtualizar(){
+  const inp = document.getElementById('r-arq'), msg = document.getElementById('r-atu-msg'), res = document.getElementById('r-atu-res');
+  if (!SERVIDO) { msg.textContent = 'Abra o Revisor pelo atalho (localhost) para enviar arquivos.'; return; }
+  if (!inp.files.length) { msg.textContent = 'Escolha os arquivos.'; return; }
+  const fd = new FormData(); [...inp.files].forEach(f => fd.append('arquivo', f, f.name));
+  document.getElementById('r-enviar').disabled = true; msg.textContent = 'Enviando…';
+  try {
+    const j = await (await fetch('upload-atualizado', {method: 'POST', body: fd})).json();
+    res.innerHTML = (j.recebidos||[]).map(x => '✓ <b>'+esc(x.tipo)+'</b> '+esc(x.empresa)+' · '+esc(x.periodo)+' · '+esc(x.arquivo)+(x.substitui ? ' <span class="small">(substitui '+esc(x.substitui)+')</span>' : ' <span class="small">(mês novo)</span>')).join('<br>')
+      + (j.recusados||[]).map(x => '<br><span class="bad">✗ '+esc(x.arquivo)+': '+esc(x.motivo)+'</span>').join('');
+    if (!(j.recebidos||[]).length) { msg.textContent = 'Nenhum arquivo aceito.'; document.getElementById('r-enviar').disabled = false; return; }
+    msg.textContent = 'Revisando de novo…';
+    await fetch('revisar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
+    for (let i = 0; i < 600; i++) {
+      await new Promise(r => setTimeout(r, 1500));
+      const pr = await (await fetch('progresso')).json();
+      if (!pr.rodando) { if (pr.erro) { msg.textContent = 'Erro na revisão: ' + pr.erro; document.getElementById('r-enviar').disabled = false; return; } location.hash = '#recuperacao'; location.reload(); return; }
+      msg.textContent = 'Revisando de novo… ' + ((pr.log||[]).slice(-1)[0] || '');
+    }
+  } catch (e) { msg.textContent = 'Falhou: ' + e.message; document.getElementById('r-enviar').disabled = false; }
+}
+function recCsv(){
+  const cols = ['tese_id','tese','tributo','nome','empresa','periodo','seguranca','comprovacao','valor_original','selic_pct','valor_atualizado','limite','situacao','status','valor_recuperado','via','fundamento','memoria'];
+  const lin = [cols.join(';')].concat(recFiltradas().map(o=>cols.map(c=>{ let v=o[c]; if(typeof v==='number') v=String(v).replace('.',','); return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; }).join(';')));
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+lin.join('\n')],{type:'text/csv'})); a.download='oportunidades_recuperacao.csv'; a.click();
+}
+if (SERVIDO) fetch('api/recuperacao').then(r=>r.ok?r.json():null).then(j=>{ if(!j||!j.oportunidades) return; const st={}; j.oportunidades.forEach(o=>st[o.id]=o); R.oportunidades.forEach(o=>{ const x=st[o.id]; if(x) Object.assign(o,{status:x.status,historico:x.historico,valor_recuperado:x.valor_recuperado}); }); R.painel=j.painel||R.painel; renderRec(); }).catch(()=>{});
+
+// ------------------------------------------------------------------ Análise Estratégica
+const ES = D.estrategia || {empresas: [], legislacao: []};
+let ESi = Math.max(0, ES.empresas.findIndex(e=>e.lucro_real));
+const pct = v => (v==null?'-':String(Number(v).toFixed(2)).replace('.',',')+'%');
+function esTab(cols, linhas){ return '<div class="tw"><table><thead><tr>'+cols.map(c=>'<th'+(c[2]?' class="num"':'')+'>'+esc(c[0])+'</th>').join('')+'</tr></thead><tbody>'+(linhas.length?linhas.map(l=>'<tr>'+cols.map(c=>'<td'+(c[2]?' class="num"':'')+'>'+c[1](l)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+cols.length+'" class="empty">sem dados no período</td></tr>')+'</tbody></table></div>'; }
+function esRender(){
+  const e = ES.empresas[ESi]; const el = document.getElementById('es-corpo');
+  if (!e) { el.innerHTML = '<div class="empty">Sem empresa analisada.</div>'; return; }
+  document.getElementById('es-per').textContent = (e.regime||'regime não identificado')+' · período '+e.periodo_analise+' ('+e.meses+' meses)';
+  const T = e.tributos; const maxT = Math.max(...T.map(t=>t.recolhido),1); const top = T.slice().sort((a,b)=>b.recolhido-a.recolhido)[0]||{};
+  let h = '<div class="kpis"><div class="kpi" style="--k:var(--c-risco)"><div class="l">Carga tributária do período</div><div class="v">'+brl(e.carga_total)+'</div><div class="h">'+pct(e.carga_pct)+' da receita de '+brl(e.receita)+'</div></div>'
+   + '<div class="kpi" style="--k:var(--c-rec)"><div class="l">Maior peso</div><div class="v">'+esc(top.tributo||'-')+'</div><div class="h">'+pct(top.pct_carga)+' da carga</div></div>'
+   + '<div class="kpi" style="--k:var(--c-pago)"><div class="l">Oportunidades em prazo</div><div class="v">'+brl(T.reduce((s,t)=>s+t.oportunidade,0))+'</div><div class="h">da aba Recuperação de Créditos</div></div>'
+   + '<div class="kpi" style="--k:var(--c-plan)"><div class="l">Exposição (riscos)</div><div class="v">'+brl(T.reduce((s,t)=>s+t.riscos,0))+'</div><div class="h">créditos indevidos, omissões, divergências</div></div></div>';
+  h += '<div class="card"><h3 style="margin-top:0">1. Mapa da carga por tributo</h3><div class="chart">'+T.filter(t=>t.recolhido>0).map(t=>'<div class="lbl">'+esc(t.tributo)+'</div><div><div class="bar" style="--cc:var(--c-risco);width:'+(t.recolhido/maxT*100).toFixed(1)+'%"></div></div><div class="val">'+brl(t.recolhido)+' · '+pct(t.pct_receita)+'</div>').join('')+'</div>'
+   + esTab([['Tributo',t=>'<b>'+esc(t.tributo)+'</b>'],['Débitos',t=>brl(t.debitos),1],['Créditos',t=>brl(t.creditos),1],['Recolhido',t=>brl(t.recolhido),1],['% receita',t=>pct(t.pct_receita),1],['% da carga',t=>pct(t.pct_carga),1],['Achados',t=>t.achados,1],['Riscos',t=>brl(t.riscos),1],['Oportunidade',t=>'<b>'+brl(t.oportunidade)+'</b>',1]], T)
+   + '<div class="small" style="margin-top:6px">Débitos e créditos de ICMS/IPI do E110/E520; PIS/COFINS do M200/M600; ISS das NFS-e (A100). Recolhido = o que sobrou para pagar no período.</div></div>';
+  const M = e.mensal||[];
+  h += '<div class="card"><h3 style="margin-top:0">2. Carga mês a mês</h3>'+esTab([['Mês',m=>esc(m.periodo)],['Receita',m=>brl(m.receita),1],['ICMS',m=>brl(m.icms_recolher||0),1],['ICMS-ST',m=>brl(m.icms_st||0),1],['DIFAL/FCP',m=>brl(m.difal_fcp||0),1],['IPI',m=>brl(m.ipi_recolher||0),1],['PIS/COFINS',m=>m.pis_cofins==null?'-':brl(m.pis_cofins),1],['Total',m=>'<b>'+brl(m.total_tributos)+'</b>',1],['Carga',m=>pct(m.carga_pct),1]], M)+'</div>';
+  h += '<div class="card"><h3 style="margin-top:0">3. Produtos que mais geram tributo <span class="small">('+e.qtd_produtos+' produtos vendidos; EFD Contribuições item a item)</span></h3>'
+   + esTab([['Produto',p=>esc(p.descr||p.cod)+'<div class="small">'+esc(p.cod)+'</div>'],['NCM',p=>esc(p.ncm)],['Receita',p=>brl(p.receita),1],['ICMS',p=>brl(p.icms),1],['IPI',p=>brl(p.ipi),1],['PIS/COFINS',p=>brl(p.pis_cofins),1],['Carga',p=>'<b>'+brl(p.carga)+'</b>',1],['% do preço',p=>pct(p.carga_pct),1],['Regime PIS/COFINS (NCM)',p=>esc(p.regime_pis_cofins)+(p.alerta?'<div class="bad small">'+esc(p.alerta)+'</div>':'')]], e.produtos.slice(0,25))
+   + '<div class="small" style="margin-top:6px">NCM: confira a classificação dos produtos de maior carga (Revisão de NCM). Produto monofásico ou de alíquota zero com PIS/COFINS na venda é pagamento a maior (T08).</div></div>';
+  h += '<div class="card"><h3 style="margin-top:0">4. Operações (CFOP de saída) por carga</h3>'+esTab([['CFOP',o=>'<b>'+esc(o.cfop)+'</b> '+esc(o.descr)],['Valor',o=>brl(o.valor),1],['ICMS',o=>brl(o.icms),1],['ICMS-ST',o=>brl(o.st),1],['IPI',o=>brl(o.ipi),1],['Carga',o=>pct(o.carga_pct),1]], e.operacoes.slice(0,15))+'</div>';
+  const F = e.fornecedores; const refc = e.credito_ref_pct;
+  h += '<div class="card"><h3 style="margin-top:0">5. Fornecedores: quanto crédito cada um gera</h3><div class="small" style="margin-bottom:8px">'+e.qtd_fornecedores+' fornecedor(es). '+(e.sem_xml_regime?e.sem_xml_regime+' sem XML para saber se é do Simples (CRT): envie os XML de entrada. ':'')+(refc!=null?'Fornecedores do regime normal geram, em média, <b>'+pct(refc)+'</b> de crédito sobre o valor comprado.':'')+'</div>'
+   + esTab([['Fornecedor',f=>esc(f.nome)+'<div class="small">'+esc(f.cnpj)+' · '+esc(f.uf||'')+'</div>'],['Simples?',f=>f.simples==null?'<span class="small">sem XML</span>':(f.simples?'<b>Sim</b>':'Não')],['Compras',f=>brl(f.valor),1],['ICMS',f=>brl(f.icms),1],['IPI',f=>brl(f.ipi),1],['PIS/COFINS',f=>brl(f.pis_cofins),1],['Crédito',f=>'<b>'+pct(f.credito_pct)+'</b>',1],['Desconto que empata',f=>(f.simples&&refc!=null&&refc>f.credito_pct)?'<b>'+pct(refc-f.credito_pct)+'</b>':'-',1]], F.slice(0,25))
+   + '<div class="small" style="margin-top:6px">Fornecedor do Simples: o crédito de ICMS é só o informado na nota (LC 123/2006, art. 23); o PIS/COFINS dá crédito integral no não cumulativo. "Desconto que empata" = quanto o preço do fornecedor do Simples precisa ser menor para o custo líquido igualar o de um fornecedor do regime normal. Crédito 0% em fornecedor relevante pede conferência (crédito não tomado ou item sem direito).</div></div>';
+  const U = e.ufs;
+  h += '<div class="card"><h3 style="margin-top:0">6. Operações interestaduais e centro de distribuição</h3>'
+   + esTab([['UF',u=>'<b>'+esc(u.uf)+'</b>'],['Vendas',u=>brl(u.valor),1],['% vendas',u=>pct(u.pct),1],['ICMS',u=>brl(u.icms),1],['ICMS-ST',u=>brl(u.st),1],['DIFAL/FCP',u=>brl(u.difal),1],['Alíq. inter.',u=>u.aliq_inter==null?'-':pct(u.aliq_inter),1],['Alíq. interna destino',u=>u.aliq_interna==null?'-':pct(u.aliq_interna),1]], U.slice(0,15))
+   + '<h3>Simulador de centro de distribuição</h3><div class="filters" style="position:static"><label>UF do CD<select id="cd-uf">'+U.filter(u=>u.aliq_inter!=null).map(u=>'<option value="'+u.uf+'">'+u.uf+' ('+pct(u.pct)+' das vendas)</option>').join('')+'</select></label>'
+   + '<label>Margem bruta (%)<input id="cd-mg" value="30"></label><label>Vendas a não contribuinte (%)<input id="cd-nc" value="'+String(((e.indicadores||{}).nao_contribuinte_pct||0)).replace('.',',')+'"></label><label>Benefício estadual no CD (% do ICMS)<input id="cd-ben" value="0"></label><label>Custo fixo do CD por mês (R$)<input id="cd-cf" value="0"></label><label>Economia de frete por mês (R$)<input id="cd-fr" value="0"></label></div><div id="cd-res" style="margin-top:10px"></div>'
+   + '<div class="small" style="margin-top:6px">Como o cálculo funciona: hoje a venda sai com ICMS interestadual (mais DIFAL a não contribuinte ou ST quando houver). Com o CD, a mercadoria é transferida pelo custo (ICMS interestadual, que vira crédito no CD) e vendida dentro do estado com a alíquota interna. Na cadeia o ICMS é praticamente neutro (o cliente contribuinte credita; o não contribuinte já paga a alíquota interna pelo DIFAL); o que muda o resultado é benefício fiscal no estado do CD, fluxo de caixa (sem antecipação de ST/DIFAL) e logística. <b>Risco:</b> o CD precisa de substância econômica (estrutura, estoque, pessoal); estrutura só para mudar o estado do imposto pode ser desconsiderada (CTN, art. 116, parágrafo único). Transferência entre estabelecimentos: ADC 49 e LC 204/2023 (verificar regras de transferência de crédito).</div></div>';
+  const R = e.reforma;
+  h += '<div class="card"><h3 style="margin-top:0">7. Reforma Tributária: projeção 2026 a 2033</h3><div class="small" style="margin-bottom:8px">Base anualizada do período: receita '+brl(R.receita_ano)+', compras com crédito '+brl(R.compras_credito_ano)+', PIS/COFINS '+brl(R.pis_cofins_ano)+', ICMS (com ST/DIFAL) '+brl(R.icms_ano)+', ISS '+brl(R.iss_ano)+', IPI '+brl(R.ipi_ano)+'.</div>'
+   + '<div class="filters" style="position:static"><label>CBS (%)<input id="rt-cbs" value="8,8"></label><label>IBS (%)<input id="rt-ibs" value="17,7"></label><label>Compras com crédito no novo modelo (% da receita)<input id="rt-cmp" value="'+String((R.receita_ano?R.compras_credito_ano/R.receita_ano*100:0).toFixed(1)).replace('.',',')+'"></label><label>Repasse de preço (%)<input id="rt-rep" value="0"></label></div><div id="rt-res" style="margin-top:10px"></div>'
+   + '<div class="small" style="margin-top:6px">Transição (EC 132/2023, LC 214/2025): 2026 teste (CBS 0,9% e IBS 0,1%, compensáveis); 2027 CBS plena e fim do PIS/COFINS, IPI zerado (exceto ZFM); 2029 a 2032 o IBS sobe 10% da alíquota por ano e ICMS/ISS caem na mesma proporção; 2033 só CBS/IBS. Crédito amplo: tudo que a empresa compra com CBS/IBS destacado gera crédito (inclusive uso e consumo). Alíquotas de referência dependem de resolução do Senado: os 8,8% e 17,7% são estimativas, ajuste aqui. Simplificação: não considera regimes diferenciados (redução de 30%/60%), Imposto Seletivo nem split payment.</div></div>';
+  const P = e.plano;
+  h += '<div class="card"><h3 style="margin-top:0">8. Plano de ação estratégico</h3>'+esTab([['Tipo',x=>'<span class="tag">'+esc(x.tipo)+'</span>'],['O que fazer',x=>'<b>'+esc(x.titulo)+'</b><div class="small">'+esc(x.acao)+'</div>'],['Tributo',x=>esc(x.tributo)],['Período',x=>esc(x.periodo)],['Impacto',x=>brl(x.impacto),1],['Risco/segurança',x=>esc(x.risco)+'<div class="small">'+esc(x.comprovacao)+'</div>'],['Prazo',x=>esc(x.prazo)],['Fundamento',x=>'<span class="small">'+esc(x.fundamento)+'</span>']], P.slice(0,40))+'</div>';
+  h += '<div class="card"><h3 style="margin-top:0">9. Legislação considerada <span class="small">(base revisada até '+esc(ES.base_ate)+')</span></h3>'+esTab([['Norma / decisão',l=>'<b>'+esc(l.norma)+'</b><div class="small">'+esc(l.tema)+'</div>'],['Vigência',l=>esc(l.vigencia)],['O que muda',l=>esc(l.impacto)],['Onde o revisor usa',l=>esc(l.na_ferramenta)],['Situação',l=>esc(l.status)]], ES.legislacao)+'<div class="small" style="margin-top:6px">A ferramenta não acompanha a legislação sozinha: esta lista é revisada e datada. Onde a situação pede confirmação, confirme antes de propor a tese ao cliente.</div></div>';
+  el.innerHTML = h;
+  ['cd-uf','cd-mg','cd-nc','cd-ben','cd-cf','cd-fr'].forEach(id=>{ const x=document.getElementById(id); if(x) x.addEventListener('input', esCD); });
+  ['rt-cbs','rt-ibs','rt-cmp','rt-rep'].forEach(id=>document.getElementById(id).addEventListener('input', esReforma));
+  esCD(); esReforma();
+}
+const num_ = id => parseFloat(String((document.getElementById(id)||{}).value||'0').replace(/\./g,'').replace(',','.'))||0;
+function esCD(){
+  const e = ES.empresas[ESi]; const box = document.getElementById('cd-res'); const sel = document.getElementById('cd-uf'); if(!sel||!sel.value){ if(box) box.innerHTML='<div class="empty">Sem vendas interestaduais no período.</div>'; return; }
+  const u = e.ufs.find(x=>x.uf===sel.value); const m = e.meses||1; const mg = num_('cd-mg')/100; const nc = Math.min(Math.max(num_('cd-nc')/100,0),1);
+  const venda = u.valor, custo = venda*(1-mg), inter = (u.aliq_inter||12)/100, interna = (u.aliq_interna||18)/100;
+  const hoje_emp = u.icms + u.st + u.difal;                       // o que a empresa recolhe hoje sobre essas vendas
+  const transf = custo*inter, icms_cd = Math.max(venda*interna - transf, 0), beneficio = icms_cd*num_('cd-ben')/100;
+  const cd_emp = transf + icms_cd - beneficio;                    // o que a empresa recolheria com o CD (origem + destino)
+  // custo que fica com o consumidor/empresa (não vira crédito do cliente): só a parte vendida a não contribuinte
+  const custo_hoje = venda*nc*interna, custo_cd = venda*nc*interna - beneficio*nc;
+  const fixo = num_('cd-cf')*m, frete = num_('cd-fr')*m;
+  const resultado = beneficio + frete - fixo;
+  box.innerHTML = '<table><tbody><tr><td>Vendas para '+esc(u.uf)+' no período</td><td class="num">'+brl(venda)+'</td></tr>'
+   +'<tr><td>ICMS + ST + DIFAL que a empresa recolhe hoje sobre essas vendas</td><td class="num">'+brl(hoje_emp)+'</td></tr>'
+   +'<tr><td>Com CD: ICMS da transferência ('+pct(inter*100)+' sobre o custo) + ICMS da venda interna ('+pct(interna*100)+') − crédito − benefício</td><td class="num">'+brl(cd_emp)+'</td></tr>'
+   +'<tr><td class="small" colspan="2">A diferença acima <b>não é custo</b> na venda a contribuinte: o cliente credita o ICMS maior. O que pesa de verdade é a parte vendida a não contribuinte ('+pct(nc*100)+'), que hoje já paga a alíquota interna pelo DIFAL: '+brl(custo_hoje)+' hoje × '+brl(custo_cd)+' com o CD.</td></tr>'
+   +'<tr><td>Benefício estadual no CD</td><td class="num">'+brl(beneficio)+'</td></tr><tr><td>Economia de frete − custo fixo do CD ('+m+' meses)</td><td class="num">'+brl(frete)+' − '+brl(fixo)+'</td></tr>'
+   +'<tr><td><b>Resultado econômico estimado do CD no período</b></td><td class="num"><b class="'+(resultado>=0?'ok':'bad')+'">'+(resultado>=0?'ganho de ':'custo de ')+brl(Math.abs(resultado))+'</b></td></tr>'
+   +'<tr><td class="small" colspan="2">Fluxo de caixa: com o CD, ST e DIFAL deixam de ser antecipados na saída da matriz ('+brl(u.st+u.difal)+' no período) e passam a ser apurados no CD.</td></tr></tbody></table>';
+}
+function esReforma(){
+  const R = ES.empresas[ESi].reforma; const cbs=num_('rt-cbs')/100, ibs=num_('rt-ibs')/100, cmp=num_('rt-cmp')/100, rep=num_('rt-rep')/100;
+  const rec = R.receita_ano*(1+rep), comp = R.receita_ano*cmp;
+  const atual = R.pis_cofins_ano + R.icms_ano + R.iss_ano + R.ipi_ano;
+  const anos = [[2026,0.009,0.001,1,1,1],[2027,cbs,0.001,0,1,1],[2028,cbs,0.001,0,1,1],[2029,cbs,ibs*0.1,0,0.9,0.9],[2030,cbs,ibs*0.2,0,0.8,0.8],[2031,cbs,ibs*0.3,0,0.7,0.7],[2032,cbs,ibs*0.4,0,0.6,0.6],[2033,cbs,ibs,0,0,0]];
+  const lin = anos.map(([a,c,i,pc,icm,iss])=>{ const novo = (rec-comp)*(c+i); const resid = R.pis_cofins_ano*pc + R.icms_ano*icm + R.iss_ano*iss + (a===2026?R.ipi_ano:0); const teste = a===2026; const total = (teste?0:novo) + resid; return {a, novo: teste?0:novo, resid, total, dif: total-atual, obs: teste?'CBS/IBS de teste compensáveis com PIS/COFINS':''}; });
+  document.getElementById('rt-res').innerHTML = '<div class="small">Hoje (anualizado): <b>'+brl(atual)+'</b> de PIS/COFINS, ICMS, ISS e IPI.</div>'+esTab([['Ano',x=>'<b>'+x.a+'</b>'+(x.obs?'<div class="small">'+esc(x.obs)+'</div>':'')],['CBS + IBS (líquido de créditos)',x=>brl(x.novo),1],['Tributos antigos que ainda restam',x=>brl(x.resid),1],['Total',x=>'<b>'+brl(x.total)+'</b>',1],['Diferença para hoje',x=>'<span class="'+(x.dif>0?'bad':'ok')+'">'+(x.dif>0?'+ ':'− ')+brl(Math.abs(x.dif))+'</span>',1]], lin);
+}
+const esSel = document.getElementById('es-emp'); esSel.innerHTML = ES.empresas.map((e,i)=>'<option value="'+i+'">'+esc(e.nome)+(e.lucro_real?' (Lucro Real)':'')+'</option>').join(''); esSel.value = ESi; esSel.addEventListener('change', ev=>{ ESi=+ev.target.value; esRender(); });
+esRender();
+
+rOpts('rf-emp', R.oportunidades.map(o=>o.empresa), nomeEmp); rOpts('rf-tese', R.oportunidades.map(o=>o.tese_id), v=>{const o=R.oportunidades.find(x=>x.tese_id===v); return v+' '+(o?o.tese:'');});
+rOpts('rf-trib', R.oportunidades.map(o=>o.tributo)); rOpts('rf-ano', R.oportunidades.map(o=>o.ano)); rOpts('rf-st', STATUS_R);
+document.getElementById('rf-reg').value = RF.reg; if(!R.tem_lucro_real){ const o_=document.querySelector('#rf-reg option[value="lr"]'); o_.textContent='Lucro Real (nenhuma empresa no lote)'; }
+[['rf-reg','reg'],['rf-emp','emp'],['rf-tese','tese'],['rf-trib','trib'],['rf-ano','ano'],['rf-seg','seg'],['rf-comp','comp'],['rf-st','st'],['rf-sit','sit']].forEach(([id,k])=>document.getElementById(id).addEventListener('change',e=>{RF[k]=e.target.value; renderRec();}));
+renderRec();
+
+</script>
+</body>
+</html>
